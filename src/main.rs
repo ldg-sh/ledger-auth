@@ -1,4 +1,5 @@
 use actix_web::{web, App, HttpServer};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::config::EnvConfig;
 use crate::routes::configure_routes;
 use crate::db::postgres_service::PostgresService;
@@ -32,7 +33,10 @@ async fn main() -> std::io::Result<()> {
 
 
     HttpServer::new(move || {
+        let auth = HttpAuthentication::bearer(utils::webutils::validate_token);
+
         App::new()
+            .wrap(auth)
             .app_data(web::Data::new(Arc::clone(&postgres_service)))
             .configure(configure_routes)
     })

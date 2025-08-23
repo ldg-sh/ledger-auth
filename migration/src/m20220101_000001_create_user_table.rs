@@ -9,40 +9,52 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Item::Table)
+                    .table(User::Table)
                     .col(
-                        ColumnDef::new(Item::Id)
-                            .string()
+                        ColumnDef::new(User::Id)
+                            .uuid()
                             .not_null()
                             .primary_key()
                     )
                     .col(
-                        ColumnDef::new(Item::Name)
+                        ColumnDef::new(User::Name)
                             .string()
                             .not_null()
                     )
                     .col(
-                        ColumnDef::new(Item::CreatedAt)
+                        ColumnDef::new(User::Email)
                             .string()
                             .not_null()
                     )
                     .col(
-                        ColumnDef::new(Item::UpdatedAt)
+                        ColumnDef::new(User::Token)
                             .string()
+                            .not_null()
+                    )
+                    .col(
+                        ColumnDef::new(User::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null()
+                    )
+                    .col(
+                        ColumnDef::new(User::UpdatedAt)
+                            .timestamp_with_time_zone()
                             .not_null()
                     )
                     .to_owned()
             )
             .await?;
         Ok(())
+
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .drop_table(
                 Table::drop()
-                    .table(Item::Table)
-                    .to_owned()
+                    .table(User::Table)
+                    .if_exists()
+                    .to_owned(),
             )
             .await?;
         Ok(())
@@ -50,10 +62,12 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum Item {
+enum User {
     Table,
     Id,
     Name,
+    Email,
+    Token,
     CreatedAt,
     UpdatedAt,
 }
