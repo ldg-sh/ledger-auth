@@ -1,8 +1,8 @@
+use crate::utils::token::token_valid;
 use actix_web::{dev::ServiceRequest, error::ErrorUnauthorized, web};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use urlencoding;
 use std::sync::Arc;
-use crate::utils::token::token_valid;
+use urlencoding;
 
 use crate::{config::config, db::postgres_service::PostgresService};
 
@@ -12,7 +12,7 @@ pub fn decode_all(input: &str) -> Option<String> {
 
 pub async fn validate_token(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
     if credentials.token() == config().admin_key {
-        return Ok(req);
+        Ok(req)
     } else {
         let db = match req.app_data::<web::Data<Arc<PostgresService>>>().cloned() {
             Some(db) => db,
@@ -23,14 +23,14 @@ pub async fn validate_token(req: ServiceRequest, credentials: BearerAuth) -> Res
             return Ok(req)
         }
 
-        return Err((ErrorUnauthorized("Invalid token").into(), req))
+        Err((ErrorUnauthorized("Invalid token"), req))
     }
 }
 
 pub async fn validate_admin_token(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
     if credentials.token() == config().admin_key {
-        return Ok(req);
+        Ok(req)
     } else {
-        return Err((ErrorUnauthorized("Invalid token").into(), req))
+        Err((ErrorUnauthorized("Invalid token"), req))
     }
 }

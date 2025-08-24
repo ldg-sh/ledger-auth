@@ -18,5 +18,5 @@ impl fmt::Display for TokenType {
 }
 
 pub fn construct_token(user_id: &str, api_key: &str) -> String {
-    return BASE64_STANDARD.encode(format!("{user_id}.{api_key}"))
+    BASE64_STANDARD.encode(format!("{user_id}.{api_key}"))
 }

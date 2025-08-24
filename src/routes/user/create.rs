@@ -1,26 +1,19 @@
-use crate::config::config;
 use crate::db::postgres_service::PostgresService;
 use crate::types::token::TokenType;
 use crate::types::user::UserCreateRes;
 use crate::types::user::{DBUserCreate, RUserCreate};
-use crate::utils::token::{construct_token, encrypt, encrypt_to_base64, new_token};
+use crate::utils::token::{construct_token, encrypt, new_token};
 use actix_web::{post, web, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use std::sync::Arc;
 
-#[post("/create")]
+#[post("")]
 async fn create(
     _req: actix_web::HttpRequest,
-    auth: BearerAuth,
+    _auth: BearerAuth,
     db: web::Data<Arc<PostgresService>>,
     body: web::Json<RUserCreate>,
 ) -> HttpResponse {
-    if !(auth.token() == config().admin_key) {
-        return HttpResponse::Unauthorized().finish()
-    }
-    // So the user passes uid.key. If they are an admin they just pass admin key
-    // if they pass our user key this step will fail because the raw value is b64 not what we want.
-
     let token = new_token(TokenType::User);
 
     let encrypted_token = match encrypt(&token) {
@@ -47,5 +40,4 @@ async fn create(
     HttpResponse::Ok().json(UserCreateRes {
         token: access_token
     })
-
 }

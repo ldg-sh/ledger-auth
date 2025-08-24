@@ -1,11 +1,10 @@
 use crate::db::postgres_service::PostgresService;
-use entity::user::{Entity as User, Model as UserModel};
-use sea_orm::{DbErr, EntityTrait, Set, QueryFilter, QuerySelect, ColumnTrait, ModelTrait};
 use crate::types::user;
-use chrono::Utc;
 use crate::utils::token;
+use chrono::Utc;
+use entity::user::{Entity as User, Model as UserModel};
+use sea_orm::{ColumnTrait, DbErr, EntityTrait, ModelTrait, QueryFilter, Set};
 use uuid::Uuid;
-use crate::types::token::TokenType;
 
 impl PostgresService {
     // *** CREATE ***
@@ -13,15 +12,12 @@ impl PostgresService {
     pub async fn create_user(&self, user: user::DBUserCreate) -> Result<Uuid, DbErr> {
         let uid = token::new_id();
 
-        match self.get_user_by_email(user.email.clone()).await {
-            Ok(exists) => {
-                return Ok(exists.id)
-            },
-            Err(_) => {},
+        if let Ok(exists) = self.get_user_by_email(user.email.clone()).await {
+            return Ok(exists.id)
         };
 
         let user = entity::user::ActiveModel {
-            id: Set(uid.clone()),
+            id: Set(uid),
             name: Set(user.name),
             email: Set(user.email),
             token: Set(user.token),

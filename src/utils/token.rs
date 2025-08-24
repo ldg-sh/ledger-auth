@@ -1,23 +1,22 @@
-use actix_web::error::InternalError;
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, prelude::BASE64_STANDARD, DecodeError, Engine as _};
+use crate::{db::postgres_service::PostgresService, types::token::TokenType};
+use anyhow::Result as AResult;
 use argon2::{
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, prelude::BASE64_STANDARD, Engine as _};
 use rand_core::{OsRng, RngCore};
 use uuid::Uuid;
-use crate::{db::postgres_service::PostgresService, types::token::TokenType};
-use anyhow::{Context, Result as AResult};
 
 pub fn new_id() -> Uuid {
     Uuid::new_v4()
 }
 
-pub fn new_token(tokentype: TokenType) -> String {
+pub fn new_token(token_type: TokenType) -> String {
     let mut buf = [0u8; 32];
     let mut rng = OsRng;
     rng.fill_bytes(&mut buf);
-    format!("{}_{}", tokentype.to_string(), URL_SAFE_NO_PAD.encode(buf))
+    format!("{}_{}", token_type.to_string(), URL_SAFE_NO_PAD.encode(buf))
 }
 
 pub fn encrypt(token: &str) -> Result<String, argon2::password_hash::Error> {
@@ -58,7 +57,7 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
 
     let mut parts = token.split('.');
 
-    let id_str = match parts.nth(0) {
+    let id_str = match parts.next() {
         Some(s) => {
             println!("[>] extracted id_str: {}", s);
             s
@@ -91,7 +90,7 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
         },
     };
 
-    let raw_token = match parts.nth(0) {
+    let raw_token = match parts.next() {
         Some(token) => {
             println!("[>] extracted raw_token: {}", token);
             token
@@ -115,5 +114,5 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
 }
 
 pub fn construct_token(user_id: &str, api_key: &str) -> String {
-    return encrypt_to_base64(format!("{user_id}.{api_key}"))
+    encrypt_to_base64(&format!("{user_id}.{api_key}"))
 }

@@ -1,8 +1,9 @@
+use crate::db::postgres_service::PostgresService;
+use crate::routes::configure_routes;
 use actix_web::{web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
-use crate::routes::configure_routes;
-use crate::db::postgres_service::PostgresService;
 use std::sync::Arc;
+use utils::webutils::validate_token;
 
 mod config;
 mod db;
@@ -33,7 +34,7 @@ async fn main() -> std::io::Result<()> {
 
 
     HttpServer::new(move || {
-        let auth = HttpAuthentication::bearer(utils::webutils::validate_token);
+        let auth = HttpAuthentication::bearer(validate_token);
 
         App::new()
             .wrap(auth)

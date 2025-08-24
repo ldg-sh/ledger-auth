@@ -1,4 +1,3 @@
-use dotenv;
 use std::env;
 use std::sync::OnceLock;
 
@@ -10,7 +9,6 @@ pub struct EnvConfig {
 }
 
 impl EnvConfig {
-    // Get from env
     fn get_env(key: &str) -> String {
         env::var(key).unwrap_or_else(|_| panic!("Environment variable {} not set", key))
     }
