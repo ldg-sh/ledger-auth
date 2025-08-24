@@ -16,7 +16,7 @@ pub fn new_token(token_type: TokenType) -> String {
     let mut buf = [0u8; 32];
     let mut rng = OsRng;
     rng.fill_bytes(&mut buf);
-    format!("{}_{}", token_type.to_string(), URL_SAFE_NO_PAD.encode(buf))
+    format!("{}_{}", token_type, URL_SAFE_NO_PAD.encode(buf))
 }
 
 pub fn encrypt(token: &str) -> Result<String, argon2::password_hash::Error> {
@@ -122,7 +122,12 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
     };
 
     match verify(raw_token, &encrypted_token) {
-        Ok(_) => {
+        Ok(result) => {
+            if !result {
+                println!("[-] token verification failed (no match)");
+                return false;
+            }
+
             println!("[+] token verified successfully (match)");
             true
         },

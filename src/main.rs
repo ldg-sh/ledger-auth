@@ -18,6 +18,7 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
     let config = config::EnvConfig::from_env();
     config::CONFIG.set(config.clone()).unwrap();
+    
     let addr = format!("0.0.0.0:{}", config.port);
 
     let postgres_service = Arc::new(

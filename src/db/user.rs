@@ -1,12 +1,12 @@
+use crate::types::error::AppError;
 use crate::types::token::TokenType;
-use crate::{db::postgres_service::PostgresService, utils::token::new_token};
 use crate::types::user;
 use crate::utils::token::{self, encrypt};
+use crate::{db::postgres_service::PostgresService, utils::token::new_token};
 use chrono::Utc;
 use entity::user::{ActiveModel, Entity as User, Model as UserModel};
-use sea_orm::{ColumnTrait, DbErr, EntityTrait, ActiveModelTrait, QueryFilter, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DbErr, EntityTrait, QueryFilter, Set};
 use uuid::Uuid;
-use crate::types::error::AppError;
 
 
 impl PostgresService {
@@ -106,7 +106,7 @@ impl PostgresService {
     /// }
     /// ```
     pub async fn regenerate_user_token(&self, user: &Uuid) -> Result<String, DbErr> {
-        let user = self.get_user_by_id(&user).await?;
+        let user = self.get_user_by_id(user).await?;
 
         let token = new_token(TokenType::User);
 
