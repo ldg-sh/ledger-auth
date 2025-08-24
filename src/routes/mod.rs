@@ -5,6 +5,9 @@ pub mod user;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::scope("/health").service(health::health),
+        web::scope("/health").service(health::health)
+    );
+    cfg.service(
+        web::scope("/user").service(user::create::create)
     );
 }

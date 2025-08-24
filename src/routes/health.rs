@@ -3,7 +3,7 @@ use crate::response;
 
 #[get("")]
 async fn health(
-    req: actix_web::HttpRequest
+    _req: actix_web::HttpRequest
 ) -> HttpResponse {
 
     HttpResponse::Ok().json(

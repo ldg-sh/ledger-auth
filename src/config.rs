@@ -2,6 +2,7 @@ use dotenv;
 use std::env;
 use std::sync::OnceLock;
 
+#[derive(Clone, Debug)]
 pub struct EnvConfig {
     pub port: i32,
     pub db_url: String,
