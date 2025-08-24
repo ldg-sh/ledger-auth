@@ -41,6 +41,26 @@ pub fn decrypt_from_base64(encoded: &str) -> AResult<String> {
     Ok(s)
 }
 
+/// Validates a user token.
+///
+/// # Arguments
+/// * `db` - Reference to the PostgresService used to fetch the stored token.
+/// * `b64_token` - A base64-encoded token string in the format `<uuid>.<raw_token>`.
+///
+/// # Returns
+/// `true` if:
+/// - the base64 string decodes successfully,
+/// - the first part is a valid UUID,
+/// - a token for that UUID exists in the database,
+/// - and the provided raw token matches the stored encrypted token.
+///
+/// Otherwise returns `false`.
+///
+/// # Example
+/// ```ignore
+/// let valid = token_valid(&db, "YmFkYmVlZi4xMjM0").await;
+/// assert!(!valid);
+/// ```
 pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
     println!("[+] starting token_valid with b64_token: {}", b64_token);
 
@@ -113,6 +133,65 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
     }
 }
 
-pub fn construct_token(user_id: &str, api_key: &str) -> String {
+/// Extracts the components of a base64-encoded token string.
+///
+/// A valid token has the form `<uuid>.<raw_token>`, base64-encoded.
+/// This function:
+/// 1. Decodes the input from base64.
+/// 2. Splits it on the `.` character.
+/// 3. Parses the first part as a [`Uuid`].
+/// 4. Returns the UUID and the second part (`raw_token`) as a `String`.
+///
+/// # Arguments
+/// * `raw_token` - A base64-encoded token string in the format `<uuid>.<raw_token>`.
+///
+/// # Returns
+/// * `Some((Uuid, String))` if decoding and parsing succeed.
+/// * `None` if decoding fails, the format is invalid, or the UUID cannot be parsed.
+///
+/// # Example
+/// ```
+/// let token = "dXVpZC0xMjM=="; // "<uuid>.secret", base64-encoded
+/// if let Some((uid, raw)) = extract_token_parts(token) {
+///     println!("id: {uid}, raw: {raw}");
+/// }
+/// ```
+pub fn extract_token_parts(raw_token: &str) -> Option<(Uuid, String)> {
+    let decoded_key = match decrypt_from_base64(raw_token) {
+        Ok(decoded_key) => decoded_key,
+        Err(_) => {
+            return None
+        },
+    };
+
+    let parts: Vec<&str> = decoded_key.split(".").collect();
+
+    let raw_uid = match parts.get(0) {
+        Some(&uid) => uid,
+        None => {
+            return None
+        },
+    };
+
+    let parsed_uid = match Uuid::parse_str(raw_uid) {
+        Ok(uid) => uid,
+        Err(_) => {
+            return None
+        },
+    };
+
+    let key = match parts.get(1) {
+        Some(&key) => key,
+        None => {
+            return None
+        }
+    };
+
+
+    Some((parsed_uid, key.to_owned()))
+}
+
+
+pub fn construct_token(user_id: &Uuid, api_key: &str) -> String {
     encrypt_to_base64(&format!("{user_id}.{api_key}"))
 }

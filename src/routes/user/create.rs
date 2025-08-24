@@ -1,4 +1,5 @@
 use crate::db::postgres_service::PostgresService;
+use crate::types::error::AppError;
 use crate::types::token::TokenType;
 use crate::types::user::UserCreateRes;
 use crate::types::user::{DBUserCreate, RUserCreate};
@@ -30,12 +31,15 @@ async fn create(
         .await
     {
         Ok(user_id) => user_id,
+        Err(AppError::AlreadyExists) => {
+            return HttpResponse::Conflict().body("User already exists")
+        },
         Err(e) => {
             return HttpResponse::InternalServerError().body(e.to_string())
         }
     };
 
-    let access_token = construct_token(&user_id.to_string(), &token);
+    let access_token = construct_token(&user_id, &token);
 
     HttpResponse::Ok().json(UserCreateRes {
         token: access_token

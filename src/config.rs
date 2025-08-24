@@ -5,7 +5,8 @@ use std::sync::OnceLock;
 pub struct EnvConfig {
     pub port: i32,
     pub db_url: String,
-    pub admin_key: String
+    pub admin_key: String,
+    pub resend_key: String
 }
 
 impl EnvConfig {
@@ -18,10 +19,13 @@ impl EnvConfig {
 
 
         let db_url: String = Self::get_env("DATABASE_URL");
+        let resend_key: String = Self::get_env("RESEND_KEY");
+
         EnvConfig {
             port: Self::get_env("PORT").parse().unwrap_or(8080),
             db_url,
-            admin_key: Self::get_env("ADMIN_KEY")
+            admin_key: Self::get_env("ADMIN_KEY"),
+            resend_key
         }
     }
 }
