@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use actix_web::{post, web, HttpResponse, HttpServer};
+use actix_web::{post, web, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use uuid::Uuid;
 
 use crate::{db::postgres_service::PostgresService, types::{mail::SendEmail, user::UserRegenerateTokenRes}, utils::{mail::send_email, token::{construct_token, decrypt_from_base64, extract_token_parts, token_valid}}};
 

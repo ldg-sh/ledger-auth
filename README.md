@@ -1,91 +1,29 @@
-# Rust API Template
+# Ledger Auth
 
-A generic Rust API template with a database connection.
+Ledger Auth is the **custom authentication server** for the Ledger project.
+It provides secure token issuance and access control for Ledger.
 
----
-
-🔑 Authentication
-
-All endpoints require a valid API key via the Authorization header.
-
-| Key                  | Location | Type    | Required | Description                         |
-|----------------------|----------|---------|----------|-------------------------------------|
-| Authorization        | Header   | string  | Yes      | `Bearer <API_KEY>`                  |
-| Content-Type         | Header   | string  | Yes      | `application/json`                  |
-
----
-🌐 Base URL
-
-http://localhost:8081/
-
+⚠️ **Note:** This project is currently under construction. The roadmap and features are still being finalized.
 
 ---
 
-📦 Data Models
-
-Item
-```json
-{
-  "id": "string",
-  "name": "string",
-  "created_at": "ISO8601 timestamp",
-  "updated_at": "ISO8601 timestamp"
-}
-```
-CreateItem
-```json
-{
-  "name": "string"
-}
-```
-UpdateItem
-
-All fields optional; provide only the properties you want to modify.
-```json
-{
-  "name": "string?"
-}
-```
+## Planned features
+- TODO (Add these)
 
 ---
 
-📋 Endpoints
-
-1. Create Item
-	•	Method: POST
-	•	Path: /item/create
-	•	Permission Level: Ring1
-
-2. Update Item
-	•	Method: POST
-	•	Path: /item/update/{id}
-	•	Permission Level: Ring1
-
-3. Delete Item
-	•	Method: DELETE
-	•	Path: /item/{id}
-	•	Permission Level: Ring1
-
-4. List All Items
-	•	Method: GET
-	•	Path: /item
-	•	Permission Level: Ring2
-
-5. Get Item by ID
-	•	Method: GET
-	•	Path: /item/{id}
-	•	Permission Level: Ring2
+## Roadmap
+- TODO (Make this)
 
 ---
 
-💬 Standard Response Format
+## Getting Started
+```bash
+# Clone the repo.
+git clone https://github.com/ldg-sh/ledger-auth
 
-| Field    | Type        | Description                                 |
-|----------|-------------|---------------------------------------------|
-| success  | boolean     | Indicates if the request succeeded          |
-| data     | object/null | The response payload (or null)              |
-| error    | string/null | Error code if `success` is false            |
-| message  | string      | Human-readable status message               |
+# CD into the project.
+cd ledger-auth
 
-
----
+# Run in dev.
+cargo run
