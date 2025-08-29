@@ -2,6 +2,7 @@ use crate::utils::webutils::{validate_admin_token, validate_token};
 use actix_web::web;
 
 pub mod health;
+pub mod validate;
 pub mod user;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
@@ -23,5 +24,9 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
                     .service(user::regenerate::regenerate)
                     .wrap(user_auth.clone())
             )
+    );
+    cfg.service(
+        web::scope("/validate")
+            .service(validate::validate)
     );
 }
