@@ -3,6 +3,14 @@ name = "ledger-auth"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "ledgerauth-grpc-server"
+path = "src/bin/grpc/server.rs"
+
+[[bin]]
+name = "ledgerauth-http-server"
+path = "src/bin/http/server.rs"
+
 [dependencies]
 actix-web = "4.11.0"
 actix-web-httpauth = "0.8.2"
@@ -24,3 +32,11 @@ anyhow = "1.0.99"
 thiserror = "2.0.16"
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 serde_json = "1.0.143"
+
+tonic = "*"
+prost = "0.14"
+tonic-prost = "*"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+
+[build-dependencies]
+tonic-prost-build = "*"

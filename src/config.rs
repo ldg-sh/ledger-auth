@@ -6,7 +6,13 @@ pub struct EnvConfig {
     pub port: i32,
     pub db_url: String,
     pub admin_key: String,
-    pub resend_key: String
+    pub resend_key: String,
+    pub grpc: GrpcConfig
+}
+
+#[derive(Clone, Debug)]
+pub struct GrpcConfig {
+    pub port: i32
 }
 
 impl EnvConfig {
@@ -25,7 +31,8 @@ impl EnvConfig {
             port: Self::get_env("PORT").parse().unwrap_or(8080),
             db_url,
             admin_key: Self::get_env("ADMIN_KEY"),
-            resend_key
+            resend_key,
+            grpc: GrpcConfig { port: Self::get_env("GRPC_PORT").parse().unwrap_or(50051) }
         }
     }
 }

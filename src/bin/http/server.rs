@@ -1,24 +1,17 @@
-use crate::db::postgres_service::PostgresService;
-use crate::routes::configure_routes;
+use ledger_auth::db::postgres_service::PostgresService;
+use ledger_auth::routes::configure_routes;
 use actix_web::{web, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use std::sync::Arc;
-use utils::webutils::validate_token;
-
-mod config;
-mod db;
-mod routes;
-mod response;
-mod types;
-mod utils;
-mod macros;
+use ledger_auth::utils::webutils::validate_token;
+use ledger_auth::config;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
     let config = config::EnvConfig::from_env();
     config::CONFIG.set(config.clone()).unwrap();
-    
+
     let addr = format!("0.0.0.0:{}", config.port);
 
     let postgres_service = Arc::new(
