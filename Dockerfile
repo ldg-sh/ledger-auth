@@ -1,27 +1,19 @@
-FROM rust:1.86-slim AS builder
+FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
+RUN cargo install cargo-chef
+WORKDIR /ledger-auth
 
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
 
-RUN apt-get update \
-  && apt-get install -y curl ca-certificates pkg-config libssl-dev \
- && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
- && apt-get install -y nodejs
-
-WORKDIR /app
+FROM chef AS builder
+COPY --from=planner /ledger-auth/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
+RUN cargo build --release --bin ledger-auth
 
-RUN cargo build --release
-
-# Use smaller base image for runtime
-FROM debian:bookworm-slim
-
-
-RUN apt-get update \
-  && apt-get install -y libssl3 ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
-
-WORKDIR /app
-COPY --from=builder /app/target/release/ledger-auth .
-
-CMD ["./ledger-auth"]
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update && apt-get install -y ca-certificates
+COPY --from=builder /ledger-auth/target/release/ledger-auth /usr/local/bin/ledger-auth
+CMD ["/usr/local/bin/ledger-auth"]

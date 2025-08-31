@@ -4,12 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "ledgerauth-grpc-server"
-path = "src/bin/grpc/server.rs"
-
-[[bin]]
-name = "ledgerauth-http-server"
-path = "src/bin/http/server.rs"
+name = "ledger-auth"
+path = "src/main.rs"
 
 [dependencies]
 actix-web = "4.11.0"

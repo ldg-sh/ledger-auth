@@ -1,2 +1,2 @@
-pub mod pb { tonic::include_proto!("ledger"); } // matches package
+pub mod pb { tonic::include_proto!("auth"); }
 pub mod authentication;
