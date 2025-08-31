@@ -27,6 +27,10 @@ pub async fn validate_token(req: ServiceRequest, credentials: BearerAuth) -> Res
     }
 }
 
+pub fn grpc_valid(tok: &str) -> bool {
+    tok == config().grpc.auth_key
+}
+
 pub async fn validate_admin_token(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
     if credentials.token() == config().admin_key {
         Ok(req)
