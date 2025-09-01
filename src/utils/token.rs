@@ -171,7 +171,7 @@ pub fn extract_token_parts(raw_token: &str) -> Option<(Uuid, String)> {
 
     let parts: Vec<&str> = decoded_key.split(".").collect();
 
-    let raw_uid = match parts.get(0) {
+    let raw_uid = match parts.first() {
         Some(&uid) => uid,
         None => {
             return None
