@@ -25,7 +25,7 @@ impl EnvConfig {
         dotenv::dotenv().ok();
 
 
-        let db_url: String = Self::get_env("DATABASE_URL");
+        let db_url: String = Self::get_env("POSTGRES_URI");
         let resend_key: String = Self::get_env("RESEND_KEY");
 
         EnvConfig {
