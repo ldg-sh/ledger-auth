@@ -93,6 +93,20 @@ impl PostgresService {
         Team::find_by_id(u.team_id).one(&self.db).await?.ok_or_else(|| DbErr::RecordNotFound("Team not found".into()))
     }
 
+    pub async fn user_is_team_owner(&self, user_id: Uuid) -> Result<bool, DbErr> {
+        Ok(Team::find()
+            .filter(entity::team::Column::Owner.eq(user_id))
+            .count(&self.db)
+            .await? > 0)
+    }
+
+    pub async fn user_owns_team(&self, user_id: Uuid, team_id: Uuid) -> Result<bool, DbErr> {
+        Ok(Team::find()
+            .filter(entity::team::Column::Id.eq(team_id))
+            .filter(entity::team::Column::Owner.eq(user_id))
+            .count(&self.db)
+            .await? > 0)
+    }
 
 
     pub async fn list_users_in_team_paginated(&self, team_id: Uuid, page: u64, per_page: u64)
