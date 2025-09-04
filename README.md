@@ -9,8 +9,8 @@ It provides secure token issuance and access control for Ledger.
 - [x] Upload
 - [x] Download
 - [x] Files as CDN
-- [ ] Better error handling.
-- [ ] Standard response type.
+- [x] Better error handling.
+- [x] Standard response type.
 - [ ] File delete
 - [ ] User create, update, and delete
 - [ ] Lock files ops behind auth

@@ -1,4 +1,5 @@
 use actix_web::post;
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
 use crate::types::{error::AppError, response::{ApiResponse, ApiResult}};
@@ -17,7 +18,8 @@ pub struct Response {
 
 #[post("")]
 async fn fail(
-    _req: actix_web::HttpRequest
+    _req: actix_web::HttpRequest,
+    b: BearerAuth
 ) -> ApiResult<Response> {
 
 
