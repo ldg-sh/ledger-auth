@@ -5,6 +5,7 @@ pub mod health;
 pub mod validate;
 pub mod user;
 pub mod team;
+pub mod fail;
 
      // TODO:
      // Obviously, some logic needs cleaning. We also need to create a middleware wrapper that checks if you are a team owner in general.
@@ -74,4 +75,9 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
             )
 
     );// TODO: Auth for team routes
+
+    cfg.service(
+        web::scope("/fail")
+            .service(fail::fail)
+    );
 }

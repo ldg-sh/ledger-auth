@@ -1,9 +1,11 @@
-use actix_web::{post, HttpResponse};
+use actix_web::{post, Responder, HttpResponse};
+
+use crate::types::{error::AppError, response::{ApiResponse, ApiResult}};
 
 #[post("")]
 async fn validate(
     _req: actix_web::HttpRequest
-) -> HttpResponse {
+) -> ApiResult<String> {
 
-    HttpResponse::Ok().body("Ok")
+    Ok(ApiResponse::EmptyOk)
 }
