@@ -1,11 +1,15 @@
-use actix_web::{post, Responder, HttpResponse};
+use actix_web::post;
+use serde::{Deserialize, Serialize};
 
-use crate::types::{error::AppError, response::{ApiResponse, ApiResult}};
+use crate::types::response::{ApiResponse, ApiResult};
+
+#[derive(Serialize, Deserialize)]
+pub struct Response {}
 
 #[post("")]
 async fn validate(
     _req: actix_web::HttpRequest
-) -> ApiResult<String> {
+) -> ApiResult<Response> {
 
     Ok(ApiResponse::EmptyOk)
 }

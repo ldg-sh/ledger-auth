@@ -1,4 +1,4 @@
-use actix_web::{post, web::Json, HttpResponse};
+use actix_web::post;
 use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
 use crate::types::{error::AppError, response::{ApiResponse, ApiResult}};
@@ -9,7 +9,7 @@ pub fn test_thing() -> Result<String, AppError> {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct TestRes {
+pub struct Response {
     pub name: String,
     pub age: i64
 }
@@ -18,10 +18,10 @@ pub struct TestRes {
 #[post("")]
 async fn fail(
     _req: actix_web::HttpRequest
-) -> ApiResult<TestRes> {
+) -> ApiResult<Response> {
 
 
     //test_thing()?;
 
-    Ok(ApiResponse::Ok(TestRes { name: "Noah".to_string(), age: 18 }))
+    Ok(ApiResponse::Ok(Response { name: "Noah".to_string(), age: 18 }))
 }

@@ -5,7 +5,7 @@ use actix_web::{HttpResponse, Responder};
 pub enum ApiResponse<T> {
     Ok(T),
     EmptyOk,
-    Created(T, String),
+    Created(T),
     NoContent,
 }
 
@@ -15,8 +15,7 @@ impl<T: Serialize> Responder for ApiResponse<T> {
         match self {
             ApiResponse::Ok(v) => HttpResponse::Ok().json(v),
             ApiResponse::EmptyOk => HttpResponse::Ok().finish(),
-            ApiResponse::Created(v, loc) => HttpResponse::Created()
-                .append_header(("Location", loc))
+            ApiResponse::Created(v) => HttpResponse::Created()
                 .json(v),
             ApiResponse::NoContent => HttpResponse::NoContent().finish(),
         }

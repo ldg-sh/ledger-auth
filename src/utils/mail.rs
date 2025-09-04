@@ -48,3 +48,14 @@ pub async fn mail_token_reset(target_email: &str, new_token: &str) -> Result<Str
         ..Default::default()
     }).await
 }
+
+
+pub async fn mail_welcome(target_email: &str, token: &str) -> Result<String, String> {
+    send_email(SendEmail {
+        from: "me@mail.noahdunnagan.com".to_string(),
+        to: vec![target_email.to_string()],
+        subject: "Welcome to Ledger!".to_string(),
+        text: Some(format!("Hello and welcome to Ledger! \n\nBelow is your **secure access token**. This will grant anybody access to all services you can use. Please keep this key private \n\n{}", token)),
+        ..Default::default()
+    }).await
+}

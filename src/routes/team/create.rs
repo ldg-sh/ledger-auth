@@ -1,6 +1,14 @@
-use actix_web::{post, web, HttpResponse};
+use actix_web::{post, web};
 use std::sync::Arc;
-use crate::{db::postgres_service::PostgresService, types::team::{RTeamCreate, TeamCreateRes}};
+use crate::{db::postgres_service::PostgresService, types::team::RTeamCreate};
+use crate::types::response::{ApiResponse, ApiResult};
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct Response {
+    pub id: String,
+    pub message: String,
+}
 
 
 #[post("")]
@@ -8,24 +16,14 @@ async fn create_team(
     _req: actix_web::HttpRequest,
     db: web::Data<Arc<PostgresService>>,
     data: web::Json<RTeamCreate>
-) -> HttpResponse {
+) -> ApiResult<Response> {
     // TODO: Clean these values.
-    let team = match db.create_team(data.owner, data.name.clone()).await {
-        Ok(t) => t,
-        Err(e) => {
-            return HttpResponse::InternalServerError().body(e.to_string())
-        },
-    };
+    let team = db.create_team(data.owner, data.name.clone()).await?;
 
-    match db.set_user_team(data.owner, team).await {
-        Ok(_) => {},
-        Err(_) => {
-            return HttpResponse::InternalServerError().finish()
-        },
-    };
+    db.set_user_team(data.owner, team).await?;
 
-    HttpResponse::Ok().json(TeamCreateRes {
+    Ok(ApiResponse::Ok(Response {
         id: team.to_string(),
-        message: format!("Team {} has been successfully created.", data.name)
-    })
+        message: format!("Team {} has been successfully created.", data.name),
+    }))
 }

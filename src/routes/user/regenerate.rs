@@ -1,40 +1,33 @@
 use std::sync::Arc;
 
-use actix_web::{post, web, HttpResponse};
+use actix_web::{post, web};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 
-use crate::{db::postgres_service::PostgresService, types::{mail::SendEmail, user::UserRegenerateTokenRes}, utils::{mail::send_email, token::{construct_token, extract_token_parts}}};
+use crate::{db::postgres_service::PostgresService, types::{mail::SendEmail}, utils::{mail::send_email, token::{construct_token, extract_token_parts}}};
+use crate::types::response::{ApiResponse, ApiResult};
+use crate::types::error::AppError;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct Response {
+    pub message: String,
+}
 
 #[post("")]
 async fn regenerate(
     _req: actix_web::HttpRequest,
     db: web::Data<Arc<PostgresService>>,
     auth: BearerAuth
-) -> HttpResponse {
+
+) -> ApiResult<Response> {
     let user_id = match extract_token_parts(auth.token()) {
-        Some(user_id) => {
-            user_id.0
-        },
-        None => {
-            return HttpResponse::Unauthorized().body("Invalid authorization token");
-        },
+        Some(user_id) => user_id.0,
+        None => return Err(AppError::Unauthorized),
     };
 
-    let new_token = match db.regenerate_user_token(&user_id).await {
-        Ok(new_token) => new_token,
-        Err(e) => {
-            return HttpResponse::InternalServerError().body(e.to_string())
-        },
-    };
+    let new_token = db.regenerate_user_token(&user_id).await?;
 
-    let user_email = match db.get_user_by_id(&user_id).await {
-        Ok(user) => {
-            user.email
-        },
-        Err(e) => {
-            return HttpResponse::InternalServerError().body(e.to_string())
-        },
-    };
+    let user_email = db.get_user_by_id(&user_id).await?.email;
 
 
     let key = construct_token(&user_id, &new_token);
@@ -47,7 +40,7 @@ async fn regenerate(
         ..Default::default()
     }).await;
 
-    HttpResponse::Ok().json(UserRegenerateTokenRes {
-        message: "Regenerated user token, email has been sent with updated token.".to_string()
-    })
+    Ok(ApiResponse::Ok(Response {
+        message: "Regenerated user token, email has been sent with updated token.".to_string(),
+    }))
 }

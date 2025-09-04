@@ -1,9 +1,11 @@
- use actix_web::{post, web, HttpResponse};
+ use actix_web::{post, web};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use chrono::{Duration, Utc};
-use sea_orm::DbErr;
  use std::sync::Arc;
  use crate::{db::postgres_service::PostgresService, types::{mail::SendEmail, team::RTeamInviteUser}, utils::{mail, token}};
+ use crate::types::response::{ApiResponse, ApiResult};
+ use crate::types::error::AppError;
+ use serde::{Deserialize, Serialize};
 
 /*
 New system. Team owners create an "invite" for a user.
@@ -12,98 +14,47 @@ To get moved, they have to accept and know that they will no longer have access 
 team/join will have lots of notif checks too.
  */
 
+ #[derive(Serialize, Deserialize)]
+ pub struct Response {
+     pub message: String,
+ }
+
  #[post("")]
  async fn admin_invite(
      _req: actix_web::HttpRequest,
      db: web::Data<Arc<PostgresService>>,
      data: web::Json<RTeamInviteUser>,
      tok: BearerAuth
- ) -> HttpResponse {
+ ) -> ApiResult<Response> {
      let target_mail = data.0.user_email;
 
      let issuer_uid = match token::extract_token_parts(tok.token()) {
-         Some(id) => {
-             id.0
-         },
-         None => {
-             return HttpResponse::Unauthorized().body("Malformed token.")
-         },
+         Some(id) => id.0,
+         None => return Err(AppError::Unauthorized),
      };
 
      // This is to check if the issuer exists
-     let issuer = match db.get_user_by_id(&issuer_uid).await {
-         Ok(i) => i,
-         Err(DbErr::RecordNotFound(_)) => {
-             return HttpResponse::NotFound().body("User not found.")
-         },
-         Err(e) => {
-             eprintln!("admin_invite: get_user_by_id error: {}", e);
-             return HttpResponse::InternalServerError().body("Error while getting user.")
-         },
-     };
+     let issuer = db.get_user_by_id(&issuer_uid).await?;
 
      let issuer_team_id = match issuer.team_id {
          Some(issuer_team_id) => issuer_team_id,
-         None => {
-             return HttpResponse::Unauthorized().body("You are not a part of a team")
-         },
+         None => return Err(AppError::Forbidden),
      };
 
-     let team = match db.get_team(issuer_team_id).await {
-         Ok(t) => t,
-         Err(DbErr::RecordNotFound(_)) => {
-             return HttpResponse::NotFound().body("This team does not exist.")
-         },
-         Err(e) => {
-             eprintln!("admin_invite: get_team error: {}", e);
-             return HttpResponse::InternalServerError().finish()
-         },
-     };
+     let team = db.get_team(issuer_team_id).await?;
 
      // Check if issuer is a team owner.
-     let is_owner = match db.user_is_team_owner(issuer_uid).await {
-         Ok(b) => b,
-         Err(e) => {
-             eprintln!("admin_invite: user_is_team_owner (issuer) error: {}", e);
-             return HttpResponse::InternalServerError().finish()
-         },
-     };
+     let is_owner = db.user_is_team_owner(issuer_uid).await?;
 
-     if !is_owner {
-         return HttpResponse::Unauthorized().body("You are not allowed to perform that action.")
-     }
+     if !is_owner { return Err(AppError::Forbidden); }
 
      // Get the target user.
-     let target = match db.get_user_by_email(target_mail.clone()).await {
-         Ok(t) => t,
-         Err(DbErr::RecordNotFound(_)) => {
-           return HttpResponse::NotFound().body("Target user not found.")
-         },
-         Err(e) => { // Temp!
-             eprintln!("admin_invite: get_user_by_email error: {}", e);
-             return HttpResponse::InternalServerError().finish()
-         },
-     };
+     let target = db.get_user_by_email(target_mail.clone()).await?;
 
-     match db.user_is_team_owner(target.id).await {
-         Ok(is_owner) => {
-             if is_owner {
-                return HttpResponse::Unauthorized().body("You are not allowed to perform that action. Target is a team owner.")
-             }
-         },
-         Err(e) => {
-             eprintln!("admin_invite: user_is_team_owner (target) error: {}", e);
-             return HttpResponse::InternalServerError().finish()
-         },
-     }
+     let target_is_owner = db.user_is_team_owner(target.id).await?;
+     if target_is_owner { return Err(AppError::Forbidden); }
 
-     let invite = match db.create_invite(issuer_team_id, target.id, issuer_uid, Utc::now() + Duration::minutes(30)).await {
-         Ok(i) => i,
-         Err(e) => {
-             eprintln!("admin_invite: create_invite error: {}", e);
-             return HttpResponse::InternalServerError().finish()
-         },
-     };
+     let invite = db.create_invite(issuer_team_id, target.id, issuer_uid, Utc::now() + Duration::minutes(30)).await?;
 
      let _ = mail::send_email(SendEmail {
          from: "me@mail.noahdunnagan.com".to_string(),
@@ -113,5 +64,5 @@ team/join will have lots of notif checks too.
          ..Default::default()
      }).await;
 
-     HttpResponse::Ok().body("User has been sent an invite.")
+     Ok(ApiResponse::Ok(Response { message: "User has been sent an invite.".to_string() }))
  }

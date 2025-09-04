@@ -1,17 +1,14 @@
-use actix_web::{get, HttpResponse};
-use crate::response;
+use actix_web::get;
+use serde::{Deserialize, Serialize};
+
+use crate::types::response::{ApiResponse, ApiResult};
+
+#[derive(Serialize, Deserialize)]
+pub struct Response {}
 
 #[get("")]
 async fn health(
     _req: actix_web::HttpRequest
-) -> HttpResponse {
-
-    HttpResponse::Ok().json(
-        response::make_query_response(
-            true,
-            Some(&"Endpoints are healthy!"),
-            None,
-            Some("Server is healthy!")
-        )
-    )
+) -> ApiResult<Response> {
+    Ok(ApiResponse::EmptyOk)
 }

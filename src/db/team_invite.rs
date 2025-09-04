@@ -15,9 +15,9 @@ impl PostgresService {
         user_id: Uuid,
         invited_by: Uuid,
         expires_at: chrono::DateTime<Utc>,
-    ) -> Result<String, DbErr> {
+    ) -> Result<String, AppError> {
         if self.has_active_invite(team_id, user_id).await? {
-            return Err(DbErr::RecordNotInserted);
+            return Err(AppError::Db(DbErr::RecordNotInserted));
         }
         let id = token::new_nanoid(10);
         let now = Utc::now();
@@ -36,38 +36,38 @@ impl PostgresService {
         Ok(id)
     }
 
-    pub async fn get_invite(&self, id: &str) -> Result<InviteModel, DbErr> {
-        Invite::find_by_id(id.to_string())
+    pub async fn get_invite(&self, id: &str) -> Result<InviteModel, AppError> {
+        Ok(Invite::find_by_id(id.to_string())
             .one(&self.db)
             .await?
-            .ok_or(DbErr::RecordNotFound("Invite not found".into()))
+            .ok_or(DbErr::RecordNotFound("Invite not found".into()))?)
     }
 
     pub async fn list_pending_invites_for_user(
         &self,
         user_id: Uuid,
-    ) -> Result<Vec<InviteModel>, DbErr> {
-        Invite::find()
+    ) -> Result<Vec<InviteModel>, AppError> {
+        Ok(Invite::find()
             .filter(entity::team_invite::Column::UserId.eq(user_id))
             .filter(entity::team_invite::Column::Status.eq(false))
             .filter(entity::team_invite::Column::ExpiresAt.gt(Utc::now()))
             .all(&self.db)
-            .await
+            .await?)
     }
 
     pub async fn list_pending_invites_for_team(
         &self,
         team_id: Uuid,
-    ) -> Result<Vec<InviteModel>, DbErr> {
-        Invite::find()
+    ) -> Result<Vec<InviteModel>, AppError> {
+        Ok(Invite::find()
             .filter(entity::team_invite::Column::TeamId.eq(team_id))
             .filter(entity::team_invite::Column::Status.eq(false))
             .filter(entity::team_invite::Column::ExpiresAt.gt(Utc::now()))
             .all(&self.db)
-            .await
+            .await?)
     }
 
-    pub async fn has_active_invite(&self, team_id: Uuid, user_id: Uuid) -> Result<bool, DbErr> {
+    pub async fn has_active_invite(&self, team_id: Uuid, user_id: Uuid) -> Result<bool, AppError> {
         Ok(Invite::find()
             .filter(entity::team_invite::Column::TeamId.eq(team_id))
             .filter(entity::team_invite::Column::UserId.eq(user_id))
@@ -77,7 +77,7 @@ impl PostgresService {
             .await? > 0)
     }
 
-    pub async fn accept_invite(&self, invite_id: &str) -> Result<(), DbErr> {
+    pub async fn accept_invite(&self, invite_id: &str) -> Result<(), AppError> {
         let txn = self.db.begin().await?;
 
         let inv = Invite::find_by_id(invite_id.to_string())
@@ -87,7 +87,7 @@ impl PostgresService {
 
         if inv.expires_at <= Utc::now() || inv.status {
             txn.rollback().await?;
-            return Err(DbErr::RecordNotUpdated);
+            return Err(AppError::Db(DbErr::RecordNotUpdated));
         }
 
         let mut am: InviteActive = inv.into();
@@ -100,7 +100,7 @@ impl PostgresService {
     }
 
     /// Hard-delete all expired *pending* invites.
-    pub async fn expire_invites(&self) -> Result<u64, DbErr> {
+    pub async fn expire_invites(&self) -> Result<u64, AppError> {
         let res = Invite::delete_many()
             .filter(entity::team_invite::Column::Status.eq(false))
             .filter(entity::team_invite::Column::ExpiresAt.lte(Utc::now()))
@@ -110,10 +110,10 @@ impl PostgresService {
     }
 
     /// Hard-delete a specific invite (cancel).
-    pub async fn delete_invite(&self, invite_id: &str) -> Result<(), DbErr> {
+    pub async fn delete_invite(&self, invite_id: &str) -> Result<(), AppError> {
         let res = Invite::delete_by_id(invite_id.to_string()).exec(&self.db).await?;
         if res.rows_affected == 0 {
-            return Err(DbErr::RecordNotFound("Invite not found".into()));
+            return Err(AppError::Db(DbErr::RecordNotFound("Invite not found".into())));
         }
         Ok(())
     }
