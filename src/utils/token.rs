@@ -12,6 +12,10 @@ pub fn new_id() -> Uuid {
     Uuid::new_v4()
 }
 
+pub fn new_nanoid(len: usize) -> String {
+    nanoid::nanoid!(len, &nanoid::alphabet::SAFE).to_string()
+}
+
 pub fn new_token(token_type: TokenType) -> String {
     let mut buf = [0u8; 32];
     let mut rng = OsRng;

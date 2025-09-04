@@ -1,5 +1,6 @@
 pub mod user;
 pub mod team;
+pub mod team_invite;
 
 /*
  Users can exist alone but have no access unless in a team. Creating an account is "free" but you have no access otherwise

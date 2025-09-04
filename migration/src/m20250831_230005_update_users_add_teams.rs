@@ -26,6 +26,19 @@ enum Team {
     UpdatedAt,
 }
 
+#[derive(DeriveIden)]
+enum TeamInvite {
+    Table,
+    Id,
+    TeamId,
+    UserId,
+    InvitedBy,
+    Status,
+    ExpiresAt,
+    CreatedAt,
+    UpdatedAt,
+}
+
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, m: &SchemaManager) -> Result<(), DbErr> {
@@ -87,13 +100,6 @@ impl MigrationTrait for Migration {
             "#,
         ).await?;
 
-        // enforce NOT NULL
-        m.alter_table(
-            Table::alter()
-                .table(User::Table)
-                .modify_column(ColumnDef::new(User::TeamId).uuid().not_null())
-                .to_owned(),
-        ).await?;
 
         // FK + index
         m.alter_table(
@@ -106,7 +112,7 @@ impl MigrationTrait for Migration {
                         .from_col(User::TeamId)
                         .to_tbl(Team::Table)
                         .to_col(Team::Id)
-                        .on_delete(ForeignKeyAction::Restrict)
+                        .on_delete(ForeignKeyAction::SetNull)
                         .on_update(ForeignKeyAction::Cascade),
                 )
                 .to_owned(),
@@ -120,10 +126,61 @@ impl MigrationTrait for Migration {
                 .to_owned(),
         ).await?;
 
+        // team_invite table
+        m.create_table(
+            Table::create()
+                .table(TeamInvite::Table)
+                .col(
+                    ColumnDef::new(TeamInvite::Id)
+                        .string()
+                        .primary_key()
+                        .not_null()
+                )
+                .col(
+                    ColumnDef::new(TeamInvite::TeamId)
+                        .uuid()
+                        .not_null()
+                )
+                .col(
+                    ColumnDef::new(TeamInvite::UserId)
+                        .uuid()
+                        .not_null()
+                )
+                .col(
+                    ColumnDef::new(TeamInvite::InvitedBy)
+                        .uuid()
+                        .not_null()
+                )
+                .col(
+                    ColumnDef::new(TeamInvite::Status)
+                        .boolean()
+                        .not_null()
+                        .default(false)
+                )
+                .col(
+                    ColumnDef::new(TeamInvite::ExpiresAt)
+                        .timestamp_with_time_zone()
+                        .not_null()
+                )
+                .col(
+                    ColumnDef::new(TeamInvite::CreatedAt)
+                        .timestamp_with_time_zone()
+                        .not_null()
+                )
+                .col(
+                    ColumnDef::new(TeamInvite::UpdatedAt)
+                        .timestamp_with_time_zone()
+                        .not_null()
+                )
+                .to_owned(),
+        ).await?;
+
         Ok(())
     }
 
     async fn down(&self, m: &SchemaManager) -> Result<(), DbErr> {
+        m.drop_table(Table::drop().table(TeamInvite::Table).to_owned()).await?;
+
         m.alter_table(
             Table::alter()
                 .table(User::Table)

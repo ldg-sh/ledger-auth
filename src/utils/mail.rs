@@ -37,3 +37,14 @@ pub async fn send_email(email: SendEmail) -> Result<String, String> {
         Err(format!("Resend API error: HTTP {status}: {body}"))
     }
 }
+
+
+pub async fn mail_token_reset(target_email: &str, new_token: &str) -> Result<String, String> {
+    send_email(SendEmail {
+        from: "me@mail.noahdunnagan.com".to_string(),
+        to: vec![target_email.to_string()],
+        subject: "Ledger access token reset.".to_string(),
+        text: Some(format!("Your ledger access token has been reset. If this wasn't you, please contact support. \n \nYour new access key is: {}", new_token)),
+        ..Default::default()
+    }).await
+}

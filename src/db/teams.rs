@@ -28,8 +28,8 @@ impl PostgresService {
         Ok(tid)
     }
 
-    pub async fn get_team(&self, id: Uuid) -> Result<TeamModel, AppError> {
-        Team::find_by_id(id).one(&self.db).await?.ok_or(AppError::Db(DbErr::RecordNotFound("Team not found".to_string())))
+    pub async fn get_team(&self, id: Uuid) -> Result<TeamModel, DbErr> {
+        Team::find_by_id(id).one(&self.db).await?.ok_or(DbErr::RecordNotFound("Team not found".to_string()))
     }
 
     pub async fn list_teams_for_owner(&self, owner: Uuid) -> Result<Vec<TeamModel>, DbErr> {
@@ -91,7 +91,7 @@ impl PostgresService {
         let users = User::find().filter(entity::user::Column::TeamId.eq(src_team)).all(&txn).await?;
         for u in users {
             let mut am: UserActive = u.into();
-            am.team_id = Set(dest_team);
+            am.team_id = Set(Some(dest_team));
             am.updated_at = Set(Utc::now());
             am.update(&txn).await?;
         }

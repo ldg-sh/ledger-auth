@@ -1,6 +1,7 @@
 use chrono::Utc;
 use uuid::Uuid;
 use sea_orm::{ActiveModelTrait, ColumnTrait, DbErr, EntityTrait, PaginatorTrait, QueryFilter, Set, TransactionTrait};
+use sea_orm::sea_query::Expr;
 use crate::{types::{error::AppError, token::TokenType, user}, utils::token::{self, encrypt, new_token}};
 use crate::db::postgres_service::PostgresService;
 use entity::user::{ActiveModel as UserActive, Entity as User, Model as UserModel};
@@ -39,24 +40,16 @@ impl PostgresService {
     pub async fn create_user(&self, payload: user::DBUserCreate) -> Result<Uuid, AppError> {
         if self.user_exists_by_email(&payload.email).await? { return Err(AppError::AlreadyExists); }
         let uid = token::new_id();
-        let team_id = token::new_id();
         let now = Utc::now();
         let txn = self.db.begin().await?;
 
-        Team::insert(TeamActive {
-            id: Set(team_id),
-            name: Set(format!("{}'s Team", payload.name)),
-            owner: Set(uid),
-            created_at: Set(now),
-            updated_at: Set(now),
-        }).exec(&txn).await?;
 
         User::insert(UserActive {
             id: Set(uid),
             name: Set(payload.name),
             email: Set(payload.email),
             token: Set(payload.token),
-            team_id: Set(team_id),
+            team_id: Set(None),
             created_at: Set(now),
             updated_at: Set(now),
         }).exec(&txn).await?;
@@ -81,16 +74,31 @@ impl PostgresService {
     }
 
     pub async fn set_user_team(&self, user_id: Uuid, team_id: Uuid) -> Result<(), DbErr> {
-        Team::find_by_id(team_id).one(&self.db).await?.ok_or_else(|| DbErr::RecordNotFound("Team not found".into()))?;
-        let mut am: UserActive = self.get_user_by_id(&user_id).await?.into();
-        am.team_id = Set(team_id);
-        am.updated_at = Set(Utc::now());
-        am.update(&self.db).await.map(|_| ())
+        // Ensure team exists
+        Team::find_by_id(team_id).one(&self.db).await?
+            .ok_or_else(|| DbErr::RecordNotFound("Team not found".into()))?;
+
+        // Update directly and verify a row was affected
+        let res = entity::user::Entity::update_many()
+            .col_expr(entity::user::Column::TeamId, Expr::value(team_id))
+            .col_expr(entity::user::Column::UpdatedAt, Expr::value(Utc::now()))
+            .filter(entity::user::Column::Id.eq(user_id))
+            .exec(&self.db)
+            .await?;
+
+        if res.rows_affected == 0 { return Err(DbErr::RecordNotUpdated); }
+        Ok(())
     }
 
     pub async fn get_team_for_user(&self, user_id: Uuid) -> Result<TeamModel, DbErr> {
         let u = self.get_user_by_id(&user_id).await?;
-        Team::find_by_id(u.team_id).one(&self.db).await?.ok_or_else(|| DbErr::RecordNotFound("Team not found".into()))
+        let team_id = match u.team_id {
+            Some(t) => t,
+            None => {
+                return Err(DbErr::RecordNotFound("User doesn't have a team...".to_string()))
+            },
+        };
+        Team::find_by_id(team_id).one(&self.db).await?.ok_or_else(|| DbErr::RecordNotFound("Team not found".into()))
     }
 
     pub async fn user_is_team_owner(&self, user_id: Uuid) -> Result<bool, DbErr> {

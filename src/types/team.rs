@@ -23,3 +23,8 @@ pub struct RTeamAddUser {
 pub struct TeamAddUserRes {
     pub message: String
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RTeamInviteUser {
+    pub user_email: String
+}

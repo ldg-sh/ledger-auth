@@ -17,6 +17,13 @@ async fn create_team(
         },
     };
 
+    match db.set_user_team(data.owner, team).await {
+        Ok(_) => {},
+        Err(_) => {
+            return HttpResponse::InternalServerError().finish()
+        },
+    };
+
     HttpResponse::Ok().json(TeamCreateRes {
         id: team.to_string(),
         message: format!("Team {} has been successfully created.", data.name)

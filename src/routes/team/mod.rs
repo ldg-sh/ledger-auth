@@ -1,2 +1,3 @@
 pub mod create;
-pub mod adduser;
+pub mod admin;
+pub mod accept_invite;
