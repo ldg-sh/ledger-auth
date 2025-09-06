@@ -1,7 +1,15 @@
 [package]
 name = "ledger-auth"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[lib]
+name = "ledger_auth"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ledger-auth"
+path = "src/main.rs"
 
 [dependencies]
 actix-web = "4.11.0"
@@ -30,6 +38,11 @@ prost = "0.14"
 tonic-prost = "*"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 nanoid = "0.4.0"
+
+[dev-dependencies]
+tokio-test = "0.4"
+testcontainers = { version = "0.20", features = ["blocking"] }
+testcontainers-modules = { version = "0.8", features = ["postgres"] }
 
 [build-dependencies]
 tonic-prost-build = "*"
