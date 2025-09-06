@@ -1,14 +1,15 @@
+#[path = "common/mod.rs"]
 mod common;
 
 use actix_web::{test, http::StatusCode};
 use common::{TestContext, test_data, client::TestClient};
-use ledger_auth::types::team::{RTeamCreate, RTeamInviteUser};
-use serde_json::json;
+use ledger_auth::types::team::RTeamInviteUser;
 
 #[tokio::test]
 async fn test_team_creation_flow_success() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     // Create admin user for authentication
     let (_admin_id, admin_token) = client.create_test_admin().await;
@@ -24,7 +25,7 @@ async fn test_team_creation_flow_success() {
         .set_json(&team_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert_eq!(resp.status(), StatusCode::OK);
 
@@ -41,7 +42,7 @@ async fn test_team_creation_flow_success() {
 
     let team = created_team.unwrap();
     assert_eq!(team.name, team_data.name);
-    assert_eq!(team.owner_id, owner_id);
+    assert_eq!(team.owner, owner_id);
 
     // Verify user's team_id was set
     let updated_user = ctx.db.get_user_by_id(&owner_id).await.unwrap();
@@ -52,6 +53,7 @@ async fn test_team_creation_flow_success() {
 async fn test_team_creation_flow_unauthorized() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let (owner_id, _) = client.create_test_user().await;
     let team_data = test_data::sample_team(owner_id);
@@ -62,7 +64,7 @@ async fn test_team_creation_flow_unauthorized() {
         .set_json(&team_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -71,6 +73,7 @@ async fn test_team_creation_flow_unauthorized() {
 async fn test_team_creation_flow_user_token_forbidden() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let (owner_id, user_token) = client.create_test_user().await;
     let team_data = test_data::sample_team(owner_id);
@@ -81,7 +84,7 @@ async fn test_team_creation_flow_user_token_forbidden() {
         .set_json(&team_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     // Should be forbidden since regular users can't create teams
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
@@ -91,6 +94,7 @@ async fn test_team_creation_flow_user_token_forbidden() {
 async fn test_team_creation_flow_nonexistent_owner() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let (_admin_id, admin_token) = client.create_test_admin().await;
 
@@ -104,7 +108,7 @@ async fn test_team_creation_flow_nonexistent_owner() {
         .set_json(&team_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     // Should fail because owner doesn't exist
     assert!(resp.status().is_client_error() || resp.status().is_server_error());
@@ -114,6 +118,7 @@ async fn test_team_creation_flow_nonexistent_owner() {
 async fn test_team_invite_flow_success() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     // Create admin and set up team with owner
     let (_admin_id, admin_token) = client.create_test_admin().await;
@@ -131,7 +136,7 @@ async fn test_team_invite_flow_success() {
         .set_json(&target_user_data)
         .to_request();
 
-    let resp_create = test::call_service(&client.app, req_create_target).await;
+    let resp_create = test::call_service(&app, req_create_target).await;
     assert_eq!(resp_create.status(), StatusCode::CREATED);
 
     // Now send invite
@@ -145,7 +150,7 @@ async fn test_team_invite_flow_success() {
         .set_json(&invite_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert_eq!(resp.status(), StatusCode::OK);
 
@@ -157,6 +162,7 @@ async fn test_team_invite_flow_success() {
 async fn test_team_invite_flow_not_owner() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     // Create admin and set up team with owner
     let (_admin_id, admin_token) = client.create_test_admin().await;
@@ -176,7 +182,7 @@ async fn test_team_invite_flow_not_owner() {
         .set_json(&target_user_data)
         .to_request();
 
-    let resp_create = test::call_service(&client.app, req_create_target).await;
+    let resp_create = test::call_service(&app, req_create_target).await;
     assert_eq!(resp_create.status(), StatusCode::CREATED);
 
     // Try to send invite as non-owner
@@ -190,7 +196,7 @@ async fn test_team_invite_flow_not_owner() {
         .set_json(&invite_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     // Should be forbidden since user is not team owner
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
@@ -200,6 +206,7 @@ async fn test_team_invite_flow_not_owner() {
 async fn test_team_invite_flow_target_user_not_found() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     // Create admin and set up team with owner
     let (_admin_id, _admin_token) = client.create_test_admin().await;
@@ -217,7 +224,7 @@ async fn test_team_invite_flow_target_user_not_found() {
         .set_json(&invite_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     // Should fail because target user doesn't exist
     assert!(resp.status().is_client_error() || resp.status().is_server_error());
@@ -227,6 +234,7 @@ async fn test_team_invite_flow_target_user_not_found() {
 async fn test_team_invite_flow_invite_team_owner() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     // Create admin and set up team with owner
     let (_admin_id, admin_token) = client.create_test_admin().await;
@@ -250,7 +258,7 @@ async fn test_team_invite_flow_invite_team_owner() {
         .set_json(&invite_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     // Should be forbidden to invite existing team owners
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);

@@ -1,3 +1,4 @@
+#[path = "common/mod.rs"]
 mod common;
 
 use actix_web::{test, http::StatusCode};
@@ -7,6 +8,7 @@ use common::{TestContext, client::TestClient};
 async fn test_health_check_flow_success() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let (_user_id, user_token) = client.create_test_user().await;
     
@@ -15,12 +17,12 @@ async fn test_health_check_flow_success() {
         .insert_header(("Authorization", format!("Bearer {}", user_token)))
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::OK);
     
     // Health endpoint should return empty response on success
-    let body: serde_json::Value = test::read_body_json(resp).await;
+    let _body: serde_json::Value = test::read_body_json(resp).await;
     // Should be empty object or similar success indicator
 }
 
@@ -28,6 +30,7 @@ async fn test_health_check_flow_success() {
 async fn test_health_check_flow_admin_token() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let (_admin_id, admin_token) = client.create_test_admin().await;
     
@@ -36,7 +39,7 @@ async fn test_health_check_flow_admin_token() {
         .insert_header(("Authorization", format!("Bearer {}", admin_token)))
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::OK);
 }
@@ -45,13 +48,14 @@ async fn test_health_check_flow_admin_token() {
 async fn test_health_check_flow_invalid_token() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let req = test::TestRequest::get()
         .uri("/health")
         .insert_header(("Authorization", "Bearer invalid_token"))
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -60,12 +64,13 @@ async fn test_health_check_flow_invalid_token() {
 async fn test_health_check_flow_missing_auth() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let req = test::TestRequest::get()
         .uri("/health")
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -74,13 +79,14 @@ async fn test_health_check_flow_missing_auth() {
 async fn test_health_check_flow_malformed_auth() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let req = test::TestRequest::get()
         .uri("/health")
         .insert_header(("Authorization", "NotBearer token"))
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -89,6 +95,7 @@ async fn test_health_check_flow_malformed_auth() {
 async fn test_health_check_flow_wrong_http_method() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let (_user_id, user_token) = client.create_test_user().await;
     
@@ -98,7 +105,7 @@ async fn test_health_check_flow_wrong_http_method() {
         .insert_header(("Authorization", format!("Bearer {}", user_token)))
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     // Should return method not allowed
     assert_eq!(resp.status(), StatusCode::METHOD_NOT_ALLOWED);

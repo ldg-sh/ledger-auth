@@ -1,9 +1,8 @@
+#[path = "common/mod.rs"]
 mod common;
 
 use actix_web::{test, http::StatusCode};
 use common::{TestContext, test_data, client::TestClient};
-use ledger_auth::types::user::RUserCreate;
-use serde_json::json;
 
 #[tokio::test]
 async fn test_user_creation_flow_success() {
@@ -43,6 +42,7 @@ async fn test_user_creation_flow_success() {
 async fn test_user_creation_flow_unauthorized() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let user_data = test_data::sample_user();
 
@@ -52,7 +52,7 @@ async fn test_user_creation_flow_unauthorized() {
         .set_json(&user_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -61,6 +61,7 @@ async fn test_user_creation_flow_unauthorized() {
 async fn test_user_creation_flow_missing_auth() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let user_data = test_data::sample_user();
 
@@ -69,7 +70,7 @@ async fn test_user_creation_flow_missing_auth() {
         .set_json(&user_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -78,6 +79,7 @@ async fn test_user_creation_flow_missing_auth() {
 async fn test_user_creation_flow_user_token_forbidden() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     // Create regular user (not admin) for authentication
     let (_user_id, user_token) = client.create_test_user().await;
@@ -90,7 +92,7 @@ async fn test_user_creation_flow_user_token_forbidden() {
         .set_json(&user_data)
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     // Should be forbidden since regular users can't create other users
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
@@ -100,6 +102,7 @@ async fn test_user_creation_flow_user_token_forbidden() {
 async fn test_user_creation_flow_duplicate_email() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let (_admin_id, admin_token) = client.create_test_admin().await;
 
@@ -111,7 +114,7 @@ async fn test_user_creation_flow_duplicate_email() {
         .set_json(&user_data1)
         .to_request();
 
-    let resp1 = test::call_service(&client.app, req1).await;
+    let resp1 = test::call_service(&app, req1).await;
     assert_eq!(resp1.status(), StatusCode::CREATED);
 
     // Try to create user with same email
@@ -122,7 +125,7 @@ async fn test_user_creation_flow_duplicate_email() {
         .set_json(&user_data2)
         .to_request();
 
-    let resp2 = test::call_service(&client.app, req2).await;
+    let resp2 = test::call_service(&app, req2).await;
 
     // Should fail due to duplicate email
     assert!(resp2.status().is_client_error() || resp2.status().is_server_error());
@@ -132,6 +135,7 @@ async fn test_user_creation_flow_duplicate_email() {
 async fn test_user_regenerate_token_flow_success() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let (user_id, user_token) = client.create_test_user().await;
 
@@ -140,7 +144,7 @@ async fn test_user_regenerate_token_flow_success() {
         .insert_header(("Authorization", format!("Bearer {}", user_token)))
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert_eq!(resp.status(), StatusCode::OK);
 
@@ -158,13 +162,14 @@ async fn test_user_regenerate_token_flow_success() {
 async fn test_user_regenerate_token_flow_unauthorized() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let req = test::TestRequest::post()
         .uri("/user/regenerate")
         .insert_header(("Authorization", "Bearer invalid_token"))
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -173,12 +178,13 @@ async fn test_user_regenerate_token_flow_unauthorized() {
 async fn test_user_regenerate_token_flow_missing_auth() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
 
     let req = test::TestRequest::post()
         .uri("/user/regenerate")
         .to_request();
 
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
 
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }

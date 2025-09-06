@@ -1,6 +1,7 @@
 // Integration test runner that includes all flow tests
 // This ensures they all run with the same test database setup
 
+#[path = "common/mod.rs"]
 mod common;
 
 // Import all test modules

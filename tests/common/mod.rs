@@ -1,18 +1,23 @@
 use std::sync::Arc;
-use testcontainers::{Container, runners::AsyncRunner};
+use testcontainers::{ContainerAsync, runners::AsyncRunner};
 use testcontainers_modules::postgres::Postgres;
 use ledger_auth::db::postgres_service::PostgresService;
 use ledger_auth::config::EnvConfig;
 
+#[allow(warnings)]
 pub mod client;
 
 pub struct TestContext {
     pub db: Arc<PostgresService>,
-    pub _container: Container<Postgres>,
+    pub _container: ContainerAsync<Postgres>,
 }
 
 impl TestContext {
     pub async fn new() -> TestContext {
+        // Initialize config for tests
+        let test_config = get_test_config();
+        let _ = ledger_auth::config::CONFIG.set(test_config);
+        
         let postgres = Postgres::default();
         let container = postgres.start().await.expect("Failed to start postgres container");
 
@@ -38,11 +43,9 @@ pub fn get_test_config() -> EnvConfig {
     EnvConfig {
         port: 8080,
         db_url: "test".to_string(), // Not used in tests
-        grpc: ledger_auth::config::GrpcConfig { port: 50051 },
-        mail: ledger_auth::config::MailConfig {
-            api_key: "test".to_string(),
-            endpoint: "test".to_string(),
-        },
+        grpc: ledger_auth::config::GrpcConfig { port: 50051, auth_key: "test123".to_string() },
+        admin_key: "test123".to_string(),
+        resend_key: "test123".to_string()
     }
 }
 

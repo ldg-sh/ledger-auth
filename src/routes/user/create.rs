@@ -22,6 +22,7 @@ async fn create(
     db: web::Data<Arc<PostgresService>>,
     body: web::Json<RUserCreate>,
 ) -> ApiResult<Response> {
+    // Authentication is handled by middleware
     let token = new_token(TokenType::User);
 
     let encrypted_token = match encrypt(&token) {

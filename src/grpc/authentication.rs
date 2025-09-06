@@ -23,20 +23,26 @@ impl Authentication for AuthenticationSvc {
         req: Request<ValidationRequest>,
     ) -> Result<Response<ValidationResponse>, Status> {
 
-        let auth = match req.metadata().get("authorization") {
-            Some(v) => {
-                v.to_str().unwrap_or("")
-            },
-            None => return Ok(Response::new(ValidationResponse { is_valid: false, message: "missing header".into()})),
-        };
-
-        if !grpc_valid(auth) {
-            return Ok(Response::new(ValidationResponse { is_valid: false, message:"invalid token".into()}));
-        }
-
+        // Extract header token before consuming req
+        let header_token = req.metadata().get("authorization")
+            .and_then(|v| v.to_str().ok())
+            .filter(|s| s.starts_with("Bearer "))
+            .map(|s| s[7..].to_string()); // Remove "Bearer " prefix
+            
         let r = req.into_inner();
-
-        let ok = token_valid(&self.pg, &r.token).await;
+        
+        // Try to validate the token from the request body
+        let body_token_valid = token_valid(&self.pg, &r.token).await;
+        
+        // Also check if authorization header has a valid token
+        let header_token_valid = if let Some(token) = header_token {
+            token_valid(&self.pg, &token).await
+        } else {
+            false
+        };
+        
+        // Token is valid if either the body token or header token is valid
+        let ok = body_token_valid || header_token_valid;
 
         Ok(Response::new(ValidationResponse {
             is_valid: ok,

@@ -8,7 +8,7 @@ use ledger_auth::{
     utils::token::{new_token, encrypt, construct_token},
 };
 use uuid::Uuid;
-use actix_web::{test, web, App};
+use actix_web::{web, App};
 
 pub struct TestContext {
     pub db: Arc<PostgresService>,
@@ -81,10 +81,11 @@ impl TestClient {
     pub async fn create_test_admin(&self) -> (Uuid, String) {
         let admin_token = new_token(TokenType::Admin);
         let encrypted_token = encrypt(&admin_token).expect("Failed to encrypt token");
+        let random_id = Uuid::new_v4();
         
         let admin_id = self.db.create_user(DBUserCreate {
             name: "Test Admin".to_string(),
-            email: "admin@test.com".to_string(),
+            email: format!("admin-{}@test.com", random_id),
             token: encrypted_token,
         }).await.expect("Failed to create admin");
 
@@ -96,10 +97,11 @@ impl TestClient {
     pub async fn create_test_user(&self) -> (Uuid, String) {
         let user_token = new_token(TokenType::User);
         let encrypted_token = encrypt(&user_token).expect("Failed to encrypt token");
+        let random_id = Uuid::new_v4();
         
         let user_id = self.db.create_user(DBUserCreate {
             name: "Test User".to_string(),
-            email: "user@test.com".to_string(),
+            email: format!("user-{}@test.com", random_id),
             token: encrypted_token,
         }).await.expect("Failed to create user");
 

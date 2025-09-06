@@ -1,15 +1,17 @@
+#[path = "common/mod.rs"]
 mod common;
 
 use actix_web::{test, http::StatusCode};
 use common::{TestContext, client::TestClient};
 use tonic::Request;
-use std::sync::Arc;
+use ledger_auth::grpc::pb::authentication_server::Authentication;
 
 // HTTP validation tests
 #[tokio::test]
 async fn test_http_token_validation_flow_success() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let (_user_id, user_token) = client.create_test_user().await;
     
@@ -18,12 +20,12 @@ async fn test_http_token_validation_flow_success() {
         .insert_header(("Authorization", format!("Bearer {}", user_token)))
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::OK);
     
     // The validate endpoint returns empty response on success
-    let body: serde_json::Value = test::read_body_json(resp).await;
+    let _body: serde_json::Value = test::read_body_json(resp).await;
     // Should be empty object or similar success indicator
 }
 
@@ -31,13 +33,14 @@ async fn test_http_token_validation_flow_success() {
 async fn test_http_token_validation_flow_invalid_token() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let req = test::TestRequest::post()
         .uri("/validate")
         .insert_header(("Authorization", "Bearer invalid_token_here"))
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -46,12 +49,13 @@ async fn test_http_token_validation_flow_invalid_token() {
 async fn test_http_token_validation_flow_missing_auth() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let req = test::TestRequest::post()
         .uri("/validate")
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -60,13 +64,14 @@ async fn test_http_token_validation_flow_missing_auth() {
 async fn test_http_token_validation_flow_malformed_auth() {
     let ctx = TestContext::new().await;
     let client = TestClient::new(ctx.db.clone());
+    let app = test::init_service(client.create_app()).await;
     
     let req = test::TestRequest::post()
         .uri("/validate")
         .insert_header(("Authorization", "NotBearer invalid_token"))
         .to_request();
     
-    let resp = test::call_service(&client.app, req).await;
+    let resp = test::call_service(&app, req).await;
     
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
