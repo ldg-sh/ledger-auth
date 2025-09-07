@@ -6,7 +6,6 @@ use crate::types::user::{DBUserCreate, RUserCreate};
 use crate::utils::mail::mail_welcome;
 use crate::utils::token::{construct_token, encrypt, new_token};
 use actix_web::{post, web};
-use actix_web_httpauth::extractors::bearer::BearerAuth;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 

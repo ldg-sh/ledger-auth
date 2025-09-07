@@ -28,21 +28,21 @@ impl Authentication for AuthenticationSvc {
             .and_then(|v| v.to_str().ok())
             .filter(|s| s.starts_with("Bearer "))
             .map(|s| s[7..].to_string()); // Remove "Bearer " prefix
-            
+
         let r = req.into_inner();
-        
+
         // Try to validate the token from the request body
         let body_token_valid = token_valid(&self.pg, &r.token).await;
-        
+
         // Also check if authorization header has a valid token
         let header_token_valid = if let Some(token) = header_token {
             token_valid(&self.pg, &token).await
         } else {
             false
         };
-        
+
         // Token is valid if either the body token or header token is valid
-        let ok = body_token_valid || header_token_valid;
+        let ok = body_token_valid && header_token_valid;
 
         Ok(Response::new(ValidationResponse {
             is_valid: ok,

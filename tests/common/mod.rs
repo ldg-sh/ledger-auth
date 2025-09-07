@@ -15,23 +15,30 @@ pub struct TestContext {
 
 impl TestContext {
     pub async fn new() -> TestContext {
+        println!("[+] Initializing test context");
         // Initialize config for tests
         let test_config = get_test_config();
         let _ = ledger_auth::config::CONFIG.set(test_config);
+        println!("[+] Test configuration set");
 
+        println!("[>] Starting postgres container");
         let postgres = Postgres::default();
         let container = postgres.start().await.expect("Failed to start postgres container");
+        println!("[<] Postgres container started");
 
         let host = container.get_host().await.expect("Failed to get host");
         let port = container.get_host_port_ipv4(5432).await.expect("Failed to get port");
 
         let db_url = format!("postgresql://postgres:postgres@{}:{}/postgres", host, port);
+        println!("[+] Database URL: {}", db_url);
 
+        println!("[>] Connecting to database");
         let db = Arc::new(
             PostgresService::new(&db_url)
                 .await
                 .expect("Failed to initialize PostgresService")
         );
+        println!("[<] Database connection successful");
 
         TestContext {
             db,
