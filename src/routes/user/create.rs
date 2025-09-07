@@ -18,7 +18,6 @@ pub struct Response {
 #[post("")]
 async fn create(
     _req: actix_web::HttpRequest,
-    _auth: BearerAuth,
     db: web::Data<Arc<PostgresService>>,
     body: web::Json<RUserCreate>,
 ) -> ApiResult<Response> {

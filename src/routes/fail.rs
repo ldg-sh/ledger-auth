@@ -19,7 +19,7 @@ pub struct Response {
 #[post("")]
 async fn fail(
     _req: actix_web::HttpRequest,
-    b: BearerAuth
+    _b: BearerAuth
 ) -> ApiResult<Response> {
 
 

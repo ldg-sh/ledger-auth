@@ -1,10 +1,11 @@
-use std::sync::Arc;
-use testcontainers::{ContainerAsync, runners::AsyncRunner};
+use testcontainers::{runners::AsyncRunner, ContainerAsync};
 use testcontainers_modules::postgres::Postgres;
-use ledger_auth::db::postgres_service::PostgresService;
-use ledger_auth::config::EnvConfig;
+use std::sync::Arc;
+use ledger_auth::{
+    db::postgres_service::PostgresService,
+    config::EnvConfig,
+};
 
-#[allow(warnings)]
 pub mod client;
 
 pub struct TestContext {
@@ -17,7 +18,7 @@ impl TestContext {
         // Initialize config for tests
         let test_config = get_test_config();
         let _ = ledger_auth::config::CONFIG.set(test_config);
-        
+
         let postgres = Postgres::default();
         let container = postgres.start().await.expect("Failed to start postgres container");
 
@@ -43,18 +44,22 @@ pub fn get_test_config() -> EnvConfig {
     EnvConfig {
         port: 8080,
         db_url: "test".to_string(), // Not used in tests
-        grpc: ledger_auth::config::GrpcConfig { port: 50051, auth_key: "test123".to_string() },
-        admin_key: "test123".to_string(),
-        resend_key: "test123".to_string()
+        admin_key: "test_admin_key".to_string(),
+        resend_key: "test_resend_key".to_string(),
+        grpc: ledger_auth::config::GrpcConfig {
+            port: 50051,
+            auth_key: "test_grpc_auth".to_string(),
+        },
     }
 }
 
-// Test data helpers
+
 pub mod test_data {
     use ledger_auth::types::user::RUserCreate;
     use ledger_auth::types::team::RTeamCreate;
     use uuid::Uuid;
 
+    #[allow(dead_code)]
     pub fn sample_user() -> RUserCreate {
         RUserCreate {
             name: "Test User".to_string(),
@@ -62,6 +67,7 @@ pub mod test_data {
         }
     }
 
+    #[allow(dead_code)]
     pub fn sample_user_with_email(email: &str) -> RUserCreate {
         RUserCreate {
             name: "Test User".to_string(),
@@ -69,6 +75,7 @@ pub mod test_data {
         }
     }
 
+    #[allow(dead_code)]
     pub fn sample_team(owner_id: Uuid) -> RTeamCreate {
         RTeamCreate {
             name: "Test Team".to_string(),

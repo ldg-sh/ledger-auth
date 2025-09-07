@@ -79,7 +79,7 @@ pub async fn validate_admin_token(req: ServiceRequest, credentials: BearerAuth) 
 
     // Get user from database and check if they have admin token
     match db.get_user_by_id(&user_id).await {
-        Ok(user) => {
+        Ok(_user) => {
             // Check if the stored token starts with admin_ prefix (this is the raw encrypted token)
             // We need to verify this is actually an admin token by checking if it was created with TokenType::Admin
             let (_, raw_token) = match extract_token_parts(credentials.token()) {

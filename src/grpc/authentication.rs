@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
-use crate::{db::postgres_service::PostgresService, utils::webutils::grpc_valid};
+use crate::db::postgres_service::PostgresService;
 use super::pb::{
     authentication_server::{Authentication, AuthenticationServer},
     ValidationRequest, ValidationResponse,

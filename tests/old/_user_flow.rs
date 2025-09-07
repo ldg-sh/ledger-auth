@@ -1,4 +1,3 @@
-#[path = "common/mod.rs"]
 mod common;
 
 use actix_web::{test, http::StatusCode};

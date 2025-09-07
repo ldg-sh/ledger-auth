@@ -26,7 +26,10 @@ pub async fn accept_invite(
         Some(uid) => uid.0,
         None => return Err(AppError::BadRequest("Failed to extract token parts.".into())),
     };
-    if token_uid != invite.user_id { return Err(AppError::Unauthorized); }
+    if token_uid != invite.user_id {
+        println!("Token UUID is NOT equal to the invitee user ID.");
+        return Err(AppError::Unauthorized);
+    }
 
     db.accept_invite(&invite.id).await?;
 

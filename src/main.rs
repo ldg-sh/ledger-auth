@@ -39,9 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let http_server = tokio::spawn(async move {
         println!("Starting HTTP server on {}", http_addr);
         HttpServer::new(move || {
-            let auth = HttpAuthentication::bearer(validate_token);
             App::new()
-                .wrap(auth)
                 .app_data(web::Data::new(Arc::clone(&postgres_clone)))
                 .configure(configure_routes)
         })

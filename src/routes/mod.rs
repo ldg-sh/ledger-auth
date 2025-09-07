@@ -15,11 +15,11 @@ pub mod fail;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     let user_auth = actix_web_httpauth::middleware::HttpAuthentication::bearer(validate_token);
-    let admin_auth = actix_web_httpauth::middleware::HttpAuthentication::bearer(validate_admin_token);
+    //let admin_auth = actix_web_httpauth::middleware::HttpAuthentication::bearer(validate_admin_token);
 
     // Anything on the /health endpoint
     cfg.service(
-        web::scope("/health").service(health::health).wrap(user_auth.clone())
+        web::scope("/health").service(health::health)
     );
 
     // Anything in this .service block
@@ -31,7 +31,6 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
             .service(
                 web::scope("/create")
                     .service(user::create::create)
-                    .wrap(admin_auth.clone())
             )
 
             // user/regenerate
@@ -55,13 +54,14 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
             .service(
                 web::scope("/create")
                     .service(team::create::create_team)
-                    .wrap(admin_auth.clone())
+                    .wrap(user_auth.clone())
             )
 
             // team/invite/accept
             .service(
                 web::scope("/invite/accept")
                     .service(team::accept_invite::accept_invite)
+                    .wrap(user_auth)
             )
 
             // team/admin

@@ -160,6 +160,7 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
 ///
 /// # Example
 /// ```
+/// use ledger_auth::utils::token::extract_token_parts;
 /// let token = "dXVpZC0xMjM=="; // "<uuid>.secret", base64-encoded
 /// if let Some((uid, raw)) = extract_token_parts(token) {
 ///     println!("id: {uid}, raw: {raw}");
