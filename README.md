@@ -11,8 +11,8 @@ It provides secure token issuance and access control for Ledger.
 - [x] Files as CDN
 - [x] Better error handling.
 - [x] Standard response type.
-- [ ] File delete
-- [ ] User create, update, and delete
+- [x] File delete
+- [x] User create, update, and delete
 - [ ] Lock files ops behind auth
 - [ ] Team based auth for file access (even if solo)
 - [ ] Team based admin controls, add/remove users (even if solo)
