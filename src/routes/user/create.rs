@@ -20,6 +20,10 @@ async fn create(
     db: web::Data<Arc<PostgresService>>,
     body: web::Json<RUserCreate>,
 ) -> ApiResult<Response> {
+    // TODO: We need to add something here to prevent:
+    // Account creation spam.
+    // Cors.
+    // Rate limiting. (governor)
     // Authentication is handled by middleware
     let token = new_token(TokenType::User);
 

@@ -2,7 +2,7 @@
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use chrono::{Duration, Utc};
  use std::sync::Arc;
- use crate::{db::postgres_service::PostgresService, types::{mail::SendEmail, team::RTeamInviteUser}, utils::{mail, token}};
+ use crate::{db::postgres_service::PostgresService, types::{mail::SendEmail, team::RTeamInviteUser}, utils::{mail::{self, mail_team_invite}, token}};
  use crate::types::response::{ApiResponse, ApiResult};
  use crate::types::error::AppError;
  use serde::{Deserialize, Serialize};
@@ -30,7 +30,10 @@ team/join will have lots of notif checks too.
 
      let issuer_uid = match token::extract_token_parts(tok.token()) {
          Some(id) => id.0,
-         None => return Err(AppError::Unauthorized),
+         None => {
+             println!("Error while extracting token parts");
+             return Err(AppError::Unauthorized)
+         },
      };
 
      // This is to check if the issuer exists
@@ -56,13 +59,7 @@ team/join will have lots of notif checks too.
 
      let invite = db.create_invite(issuer_team_id, target.id, issuer_uid, Utc::now() + Duration::minutes(30)).await?;
 
-     let _ = mail::send_email(SendEmail {
-         from: "me@mail.noahdunnagan.com".to_string(),
-         to: vec![target.email],
-         subject: format!("{} team invite.", team.name),
-         text: Some(format!("You have been invited to join {}. \n \nYour invite code is: {}", team.name, invite)),
-         ..Default::default()
-     }).await;
+     mail_team_invite(&target_mail, &team.name, &invite).await.ok();
 
      Ok(ApiResponse::Ok(Response { message: "User has been sent an invite.".to_string() }))
  }

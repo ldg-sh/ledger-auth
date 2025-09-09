@@ -40,22 +40,39 @@ pub async fn send_email(email: SendEmail) -> Result<String, String> {
 
 
 pub async fn mail_token_reset(target_email: &str, new_token: &str) -> Result<String, String> {
-    send_email(SendEmail {
-        from: "me@mail.noahdunnagan.com".to_string(),
-        to: vec![target_email.to_string()],
-        subject: "Ledger access token reset.".to_string(),
-        text: Some(format!("Your ledger access token has been reset. If this wasn't you, please contact support. \n \nYour new access key is: {}", new_token)),
-        ..Default::default()
-    }).await
+    println!("Fake email to: {} with token: {}", target_email, new_token);
+    Ok("Fake email sent.".to_string())
+    // send_email(SendEmail {
+    //     from: "me@mail.noahdunnagan.com".to_string(),
+    //     to: vec![target_email.to_string()],
+    //     subject: "Ledger access token reset.".to_string(),
+    //     text: Some(format!("Your ledger access token has been reset. If this wasn't you, please contact support. \n \nYour new access key is: {}", new_token)),
+    //     ..Default::default()
+    // }).await
 }
 
 
 pub async fn mail_welcome(target_email: &str, token: &str) -> Result<String, String> {
-    send_email(SendEmail {
-        from: "me@mail.noahdunnagan.com".to_string(),
-        to: vec![target_email.to_string()],
-        subject: "Welcome to Ledger!".to_string(),
-        text: Some(format!("Hello and welcome to Ledger! \n\nBelow is your **secure access token**. This will grant anybody access to all services you can use. Please keep this key private \n\n{}", token)),
-        ..Default::default()
-    }).await
+    println!("Fake email to: {} with token: {}", target_email, token);
+    Ok("Fake email sent.".to_string())
+    // send_email(SendEmail {
+    //     from: "me@mail.noahdunnagan.com".to_string(),
+    //     to: vec![target_email.to_string()],
+    //     subject: "Welcome to Ledger!".to_string(),
+    //     text: Some(format!("Hello and welcome to Ledger! \n\nBelow is your **secure access token**. This will grant anybody access to all services you can use. Please keep this key private \n\n{}", token)),
+    //     ..Default::default()
+    // }).await
+}
+
+
+pub async fn mail_team_invite(target_email: &str, team_name: &str, invite_code: &str) -> Result<String, String> {
+    println!("Fake email to: {} \n\nteam name: {} \n\ninvite code: {}", target_email, team_name, invite_code);
+    Ok("Fake email sent.".to_string())
+    // send_email(SendEmail {
+    //     from: "me@mail.noahdunnagan.com".to_string(),
+    //     to: vec![target_email.to_string()],
+    //     subject: "Welcome to Ledger!".to_string(),
+    //     text: Some(format!("You have been invited to join {}. \n \nYour invite code is: {}", team_name, invite_code)),
+    //     ..Default::default()
+    // }).await
 }

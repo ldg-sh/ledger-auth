@@ -18,7 +18,6 @@ async fn regenerate(
     _req: actix_web::HttpRequest,
     db: web::Data<Arc<PostgresService>>,
     auth: BearerAuth
-
 ) -> ApiResult<Response> {
     let user_id = match extract_token_parts(auth.token()) {
         Some(user_id) => user_id.0,

@@ -220,7 +220,7 @@ async fn test_user_regenerate_token_flow_success() {
     // Verify token was actually changed in database
     println!("[>] Verifying token was changed in database for user: {}", user_id);
     let updated_user = ctx.db.get_user_by_id(&user_id).await.unwrap();
-    assert!(updated_user.token.len() > 0);
+    assert!(updated_user.token.is_empty());
     println!("[<] Token verified in database.");
     println!("[/] Test passed: User token regeneration successful.");
 }

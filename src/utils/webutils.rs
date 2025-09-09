@@ -50,6 +50,29 @@ pub async fn team_owner(req: ServiceRequest, credentials: BearerAuth) -> Result<
     }
 }
 
+/// For middleware to pass, you must not own a team. Preliminary Auth.
+pub async fn not_team_owner(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+    if credentials.token() == config().admin_key {
+        Ok(req)
+    } else {
+        let db = match req.app_data::<web::Data<Arc<PostgresService>>>().cloned() {
+            Some(db) => db,
+            None => return Err((ErrorUnauthorized("DB unavailable. Please contact admin something bad happened."), req)),
+        };
+
+        let user_id = match extract_token_parts(credentials.token()) {
+            Some(info) => info.0,
+            None => return Err((ErrorUnauthorized("Malformed auth token."), req)),
+        };
+
+        if db.user_is_team_owner(user_id).await.is_ok() {
+            return Err((ErrorUnauthorized("You must be a team owner to perform that action."), req))
+        }
+
+        Ok(req)
+    }
+}
+
 pub fn grpc_valid(tok: &str) -> bool {
     tok == config().grpc.auth_key
 }
@@ -59,7 +82,7 @@ pub async fn validate_admin_token(req: ServiceRequest, credentials: BearerAuth) 
     if credentials.token() == config().admin_key {
         return Ok(req);
     }
-    
+
     // If not static admin key, check database admin tokens
     let db = match req.app_data::<web::Data<Arc<PostgresService>>>().cloned() {
         Some(db) => db,
@@ -86,7 +109,7 @@ pub async fn validate_admin_token(req: ServiceRequest, credentials: BearerAuth) 
                 Some(parts) => parts,
                 None => return Err((ErrorUnauthorized("Malformed auth token."), req)),
             };
-            
+
             if raw_token.starts_with("admin_") {
                 Ok(req)
             } else {
