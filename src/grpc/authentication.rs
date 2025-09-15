@@ -1,6 +1,6 @@
-use std::sync::Arc;
+use std::{os::unix::raw, sync::Arc};
 use tonic::{Request, Response, Status};
-use crate::db::postgres_service::PostgresService;
+use crate::{config::config, db::postgres_service::PostgresService};
 use super::pb::{
     authentication_server::{Authentication, AuthenticationServer},
     ValidationRequest, ValidationResponse,
@@ -22,12 +22,15 @@ impl Authentication for AuthenticationSvc {
         &self,
         req: Request<ValidationRequest>,
     ) -> Result<Response<ValidationResponse>, Status> {
+        println!("Hit gRPC");
 
         // Extract header token before consuming req
-        let header_token = req.metadata().get("authorization")
+        let header_token = req
+            .metadata()
+            .get("authorization")
             .and_then(|v| v.to_str().ok())
-            .filter(|s| s.starts_with("Bearer "))
-            .map(|s| s[7..].to_string()); // Remove "Bearer " prefix
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| "None".to_string());
 
         let r = req.into_inner();
 
@@ -35,13 +38,9 @@ impl Authentication for AuthenticationSvc {
         let body_token_valid = token_valid(&self.pg, &r.token).await;
 
         // Also check if authorization header has a valid token
-        let header_token_valid = if let Some(token) = header_token {
-            token_valid(&self.pg, &token).await
-        } else {
-            false
-        };
+        let header_token_valid = header_token == config().grpc.auth_key;
 
-        // Token is valid if either the body token or header token is valid
+        // Token is valid if the body token and header token are valid
         let ok = body_token_valid && header_token_valid;
 
         Ok(Response::new(ValidationResponse {

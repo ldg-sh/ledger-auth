@@ -1,11 +1,11 @@
- use actix_web::{post, web};
+use actix_web::{post, web};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use chrono::{Duration, Utc};
- use std::sync::Arc;
- use crate::{db::postgres_service::PostgresService, types::{mail::SendEmail, team::RTeamInviteUser}, utils::{mail::{self, mail_team_invite}, token}};
- use crate::types::response::{ApiResponse, ApiResult};
- use crate::types::error::AppError;
- use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use crate::{db::postgres_service::PostgresService, types::{mail::SendEmail, team::RTeamInviteUser}, utils::{mail::{self, mail_team_invite}, token}};
+use crate::types::response::{ApiResponse, ApiResult};
+use crate::types::error::AppError;
+use serde::{Deserialize, Serialize};
 
 /*
 New system. Team owners create an "invite" for a user.
