@@ -29,7 +29,7 @@ impl EnvConfig {
         let resend_key: String = Self::get_env("RESEND_KEY");
 
         EnvConfig {
-            port: Self::get_env("PORT").parse().unwrap_or(8080),
+            port: Self::get_env("PORT").parse().unwrap_or(8081),
             db_url,
             admin_key: Self::get_env("ADMIN_KEY"),
             resend_key,
