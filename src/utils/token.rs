@@ -66,15 +66,12 @@ pub fn decrypt_from_base64(encoded: &str) -> AResult<String> {
 /// assert!(!valid);
 /// ```
 pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
-    println!("[+] starting token_valid with b64_token: {}", b64_token);
 
     let token = match decrypt_from_base64(b64_token) {
         Ok(token) => {
-            println!("[+] successfully base64-decoded token: {}", token);
             token
         },
         Err(e) => {
-            println!("[-] failed to decode base64 token: {:?}", e);
             return false;
         },
     };
@@ -83,44 +80,36 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
 
     let id_str = match parts.next() {
         Some(s) => {
-            println!("[>] extracted id_str: {}", s);
             s
         },
         None => {
-            println!("[-] token missing id part");
             return false;
         },
     };
 
     let id = match Uuid::parse_str(id_str) {
         Ok(id) => {
-            println!("[+] parsed UUID: {}", id);
             id
         },
         Err(e) => {
-            println!("[-] failed to parse id_str as UUID: {:?}", e);
             return false;
         },
     };
 
     let encrypted_token = match db.get_user_token(id).await {
         Ok(encrypted) => {
-            println!("[+] retrieved encrypted_token for id {}", id);
             encrypted
         },
         Err(e) => {
-            println!("[-] database lookup failed for id {}: {:?}", id, e);
             return false;
         },
     };
 
     let raw_token = match parts.next() {
         Some(token) => {
-            println!("[>] extracted raw_token: {}", token);
             token
         },
         None => {
-            println!("[-] token missing raw part");
             return false;
         },
     };
@@ -128,15 +117,12 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
     match verify(raw_token, &encrypted_token) {
         Ok(result) => {
             if !result {
-                println!("[-] token verification failed (no match)");
                 return false;
             }
 
-            println!("[+] token verified successfully (match)");
             true
         },
         Err(e) => {
-            println!("[-] token verification failed: {:?}", e);
             false
         },
     }
