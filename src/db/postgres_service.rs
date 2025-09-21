@@ -1,25 +1,20 @@
+use crate::types::error::AppError;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
-use crate::types::error::AppError;
 use tracing::info;
 
 #[derive(Clone)]
 pub struct PostgresService {
-    pub(crate) db: DatabaseConnection,
+    pub(crate) database_connection: DatabaseConnection,
 }
 
 impl PostgresService {
     pub async fn new(uri: &str) -> Result<Self, AppError> {
-        info!("Connecting to PostgreSQL...");
-        println!("Connecting to PostgreSQL...");
-        let db = Database::connect(uri).await?;
-        println!("Connected to PostgreSQL.");
-        info!("Running migrations...");
-        println!("Running migrations...");
-        Migrator::up(&db, None).await?;
-        println!("Migrations finished.");
-        info!("Connected to PostgreSQL.");
-        println!("Connected to PostgreSQL.");
-        Ok(Self { db })
+        let database_connection = Database::connect(uri).await?;
+        Migrator::up(&database_connection, None).await?;
+
+        info!("Successfully connected to PostgreSQL and ran migrations.");
+
+        Ok(Self { database_connection })
     }
 }

@@ -6,7 +6,7 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-
+use tracing::error;
 /*
 New system. Team owners create an "invite" for a user.
 Users get emailed about this invite and are given a magic link and code.
@@ -31,7 +31,7 @@ team/join will have lots of notif checks too.
      let issuer_uid = match token::extract_token_parts(tok.token()) {
          Some(id) => id.0,
          None => {
-             println!("Error while extracting token parts");
+             error!("Error while extracting token parts");
              return Err(AppError::Unauthorized)
          },
      };

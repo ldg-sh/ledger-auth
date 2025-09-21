@@ -1,6 +1,7 @@
+use crate::config::config;
 use crate::types::mail::SendEmail;
 use reqwest::{Client, ClientBuilder};
-use crate::config::config;
+use tracing::info;
 
 pub async fn send_email(email: SendEmail) -> Result<String, String> {
     let api = "https://api.resend.com/emails";
@@ -40,7 +41,7 @@ pub async fn send_email(email: SendEmail) -> Result<String, String> {
 
 
 pub async fn mail_token_reset(target_email: &str, new_token: &str) -> Result<String, String> {
-    println!("Fake email to: {} with token: {}", target_email, new_token);
+    info!("Fake email to: {} with token: {}", target_email, new_token);
     Ok("Fake email sent.".to_string())
     // send_email(SendEmail {
     //     from: "me@mail.noahdunnagan.com".to_string(),
@@ -53,7 +54,7 @@ pub async fn mail_token_reset(target_email: &str, new_token: &str) -> Result<Str
 
 
 pub async fn mail_welcome(target_email: &str, token: &str) -> Result<String, String> {
-    println!("Fake email to: {} with token: {}", target_email, token);
+    info!("Fake email to: {} with token: {}", target_email, token);
     Ok("Fake email sent.".to_string())
     // send_email(SendEmail {
     //     from: "me@mail.noahdunnagan.com".to_string(),
@@ -66,7 +67,7 @@ pub async fn mail_welcome(target_email: &str, token: &str) -> Result<String, Str
 
 
 pub async fn mail_team_invite(target_email: &str, team_name: &str, invite_code: &str) -> Result<String, String> {
-    println!("Fake email to: {} \n\nteam name: {} \n\ninvite code: {}", target_email, team_name, invite_code);
+    info!("Fake email to: {} \n\nteam name: {} \n\ninvite code: {}", target_email, team_name, invite_code);
     Ok("Fake email sent.".to_string())
     // send_email(SendEmail {
     //     from: "me@mail.noahdunnagan.com".to_string(),

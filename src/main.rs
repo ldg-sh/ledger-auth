@@ -4,6 +4,7 @@ use crate::routes::configure_routes;
 use actix_web::{web, App, HttpServer};
 use std::sync::Arc;
 use tonic::transport::Server;
+use tracing::{error, info};
 
 pub mod config;
 pub mod db;
@@ -18,13 +19,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = config::EnvConfig::from_env();
     config::CONFIG.set(config.clone()).unwrap();
 
-    println!("Starting postgres...");
+    info!("Starting postgres...");
     let postgres_service = Arc::new(
         PostgresService::new(&config.db_url)
             .await
             .expect("Failed to initialize PostgresService"),
     );
-    println!("Started postgres!");
+    info!("Started postgres!");
 
     let grpc_addr = format!("0.0.0.0:{}", config.grpc.port)
         .parse()?;
@@ -34,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let postgres_clone = postgres_service.clone();
 
     let http_server = tokio::spawn(async move {
-        println!("Starting HTTP server on {}", http_addr);
+        info!("Starting HTTP server on {}", http_addr);
         HttpServer::new(move || {
             App::new()
                 .app_data(web::Data::new(Arc::clone(&postgres_clone)))
@@ -47,17 +48,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("HTTP server crashed");
     });
 
-    println!("Starting gRPC server on {}", grpc_addr);
+    info!("Starting gRPC server on {}", grpc_addr);
     let grpc_server = Server::builder()
         .add_service(grpc_service)
         .serve(grpc_addr);
 
     tokio::select! {
         _ = grpc_server => {
-            eprintln!("gRPC server exited!");
+            error!("gRPC server exited!");
         }
         _ = http_server => {
-            eprintln!("HTTP server exited!");
+            error!("HTTP server exited!");
         }
     }
 

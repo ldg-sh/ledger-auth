@@ -1,10 +1,11 @@
+use crate::types::error::AppError;
+use crate::types::response::{ApiResponse, ApiResult};
+use crate::{db::postgres_service::PostgresService, utils::{mail::mail_token_reset, token::{construct_token, extract_token_parts}}};
 use actix_web::{post, web};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use crate::{db::postgres_service::PostgresService, utils::{mail::mail_token_reset, token::{construct_token, extract_token_parts}}};
-use std::sync::Arc;
 use serde::{Deserialize, Serialize};
-use crate::types::response::{ApiResponse, ApiResult};
-use crate::types::error::AppError;
+use std::sync::Arc;
+use tracing::error;
 
 #[derive(Serialize, Deserialize)]
 pub struct Response {
@@ -27,7 +28,7 @@ pub async fn accept_invite(
         None => return Err(AppError::BadRequest("Failed to extract token parts.".into())),
     };
     if token_uid != invite.user_id {
-        println!("Token UUID is NOT equal to the invitee user ID.");
+        error!("Token UUID is NOT equal to the invitee user ID.");
         return Err(AppError::Unauthorized);
     }
 

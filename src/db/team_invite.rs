@@ -1,12 +1,12 @@
+use crate::db::postgres_service::PostgresService;
+use crate::{types::error::AppError, utils::token};
 use chrono::Utc;
-use uuid::Uuid;
+use entity::team_invite::{ActiveModel as InviteActive, Entity as Invite, Model as InviteModel};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DbErr, EntityTrait, PaginatorTrait, QueryFilter, Set,
     TransactionTrait,
 };
-use crate::{types::error::AppError, utils::token};
-use crate::db::postgres_service::PostgresService;
-use entity::team_invite::{ActiveModel as InviteActive, Entity as Invite, Model as InviteModel};
+use uuid::Uuid;
 
 impl PostgresService {
     pub async fn create_invite(
@@ -31,14 +31,14 @@ impl PostgresService {
             created_at: Set(now),
             updated_at: Set(now),
         })
-        .exec(&self.db)
+        .exec(&self.database_connection)
         .await?;
         Ok(id)
     }
 
     pub async fn get_invite(&self, id: &str) -> Result<InviteModel, AppError> {
         Ok(Invite::find_by_id(id.to_string())
-            .one(&self.db)
+            .one(&self.database_connection)
             .await?
             .ok_or(DbErr::RecordNotFound("Invite not found".into()))?)
     }
@@ -51,7 +51,7 @@ impl PostgresService {
             .filter(entity::team_invite::Column::UserId.eq(user_id))
             .filter(entity::team_invite::Column::Status.eq(false))
             .filter(entity::team_invite::Column::ExpiresAt.gt(Utc::now()))
-            .all(&self.db)
+            .all(&self.database_connection)
             .await?)
     }
 
@@ -63,7 +63,7 @@ impl PostgresService {
             .filter(entity::team_invite::Column::TeamId.eq(team_id))
             .filter(entity::team_invite::Column::Status.eq(false))
             .filter(entity::team_invite::Column::ExpiresAt.gt(Utc::now()))
-            .all(&self.db)
+            .all(&self.database_connection)
             .await?)
     }
 
@@ -73,12 +73,12 @@ impl PostgresService {
             .filter(entity::team_invite::Column::UserId.eq(user_id))
             .filter(entity::team_invite::Column::Status.eq(false))
             .filter(entity::team_invite::Column::ExpiresAt.gt(Utc::now()))
-            .count(&self.db)
+            .count(&self.database_connection)
             .await? > 0)
     }
 
     pub async fn accept_invite(&self, invite_id: &str) -> Result<(), AppError> {
-        let txn = self.db.begin().await?;
+        let txn = self.database_connection.begin().await?;
 
         let inv = Invite::find_by_id(invite_id.to_string())
             .one(&txn)
@@ -104,14 +104,14 @@ impl PostgresService {
         let res = Invite::delete_many()
             .filter(entity::team_invite::Column::Status.eq(false))
             .filter(entity::team_invite::Column::ExpiresAt.lte(Utc::now()))
-            .exec(&self.db)
+            .exec(&self.database_connection)
             .await?;
         Ok(res.rows_affected)
     }
 
     /// Hard-delete a specific invite (cancel).
     pub async fn delete_invite(&self, invite_id: &str) -> Result<(), AppError> {
-        let res = Invite::delete_by_id(invite_id.to_string()).exec(&self.db).await?;
+        let res = Invite::delete_by_id(invite_id.to_string()).exec(&self.database_connection).await?;
         if res.rows_affected == 0 {
             return Err(AppError::Db(DbErr::RecordNotFound("Invite not found".into())));
         }
