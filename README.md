@@ -14,6 +14,7 @@ It provides secure token issuance and access control for Ledger.
 - [x] Standard response type.
 - [x] File delete
 - [x] User create, update, and delete
+- [ ] User can be in multiple teams.
 - [ ] Lock files ops behind auth
 - [ ] Team based auth for file access (even if solo)
 - [ ] Team based admin controls, add/remove users (even if solo)
