@@ -71,7 +71,7 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
         Ok(token) => {
             token
         },
-        Err(e) => {
+        Err(_) => {
             return false;
         },
     };
@@ -91,7 +91,7 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
         Ok(id) => {
             id
         },
-        Err(e) => {
+        Err(_) => {
             return false;
         },
     };
@@ -100,7 +100,7 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
         Ok(encrypted) => {
             encrypted
         },
-        Err(e) => {
+        Err(_) => {
             return false;
         },
     };
@@ -122,7 +122,7 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
 
             true
         },
-        Err(e) => {
+        Err(_) => {
             false
         },
     }

@@ -1,11 +1,11 @@
-use chrono::Utc;
-use uuid::Uuid;
-use sea_orm::{ActiveModelTrait, ColumnTrait, DbErr, EntityTrait, PaginatorTrait, QueryFilter, Set, TransactionTrait};
-use sea_orm::sea_query::Expr;
-use crate::{types::{error::AppError, token::TokenType, user}, utils::token::{self, encrypt, new_token}};
 use crate::db::postgres_service::PostgresService;
-use entity::user::{ActiveModel as UserActive, Entity as User, Model as UserModel};
+use crate::{types::{error::AppError, token::TokenType, user}, utils::token::{self, encrypt, new_token}};
+use chrono::Utc;
 use entity::team::{Entity as Team, Model as TeamModel};
+use entity::user::{ActiveModel as UserActive, Entity as User, Model as UserModel};
+use sea_orm::sea_query::Expr;
+use sea_orm::{ActiveModelTrait, ColumnTrait, DbErr, EntityTrait, PaginatorTrait, QueryFilter, Set, TransactionTrait};
+use uuid::Uuid;
 
 impl PostgresService {
     pub async fn user_exists_by_email(&self, email: &str) -> Result<bool, AppError> {
@@ -125,6 +125,17 @@ impl PostgresService {
             .await? > 0)
     }
 
+    pub async fn user_can_access_team(&self, user_id: Uuid, team_id: Uuid) -> Result<bool, AppError> {
+        let user = self.get_user_by_id(&user_id).await?;
+        let team = Team::find_by_id(team_id)
+            .one(&self.db)
+            .await?
+            .ok_or_else(|| DbErr::RecordNotFound("Team not found".into()))?;
+        if team.owner == user_id { return Ok(true); }
+        if user.team_id != Some(team_id) { return Ok(false); }
+
+        Ok(true)
+    }
 
     pub async fn list_users_in_team_paginated(&self, team_id: Uuid, page: u64, per_page: u64)
         -> Result<(Vec<UserModel>, u64), AppError> {

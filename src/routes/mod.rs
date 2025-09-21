@@ -1,4 +1,4 @@
-use crate::utils::webutils::{validate_admin_token, validate_token};
+use crate::utils::webutils::validate_token;
 use actix_web::web;
 
 pub mod health;

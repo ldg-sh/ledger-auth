@@ -1,9 +1,7 @@
 use crate::db::postgres_service::PostgresService;
 use crate::grpc::authentication;
 use crate::routes::configure_routes;
-use crate::utils::webutils::validate_token;
 use actix_web::{web, App, HttpServer};
-use actix_web_httpauth::middleware::HttpAuthentication;
 use std::sync::Arc;
 use tonic::transport::Server;
 
@@ -29,8 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Started postgres!");
 
     let grpc_addr = format!("0.0.0.0:{}", config.grpc.port)
-        .parse()
-        .unwrap();
+        .parse()?;
     let grpc_service = authentication::server(postgres_service.clone());
 
     let http_addr = format!("0.0.0.0:{}", config.port);
