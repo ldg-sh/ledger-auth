@@ -1,7 +1,7 @@
 mod common;
 
-use actix_web::{test, http::StatusCode};
-use common::{TestContext, client::TestClient};
+use actix_web::{http::StatusCode, test};
+use common::{client::TestClient, TestContext};
 
 #[tokio::test]
 async fn test_health_check_flow_success() {
@@ -14,9 +14,7 @@ async fn test_health_check_flow_success() {
     println!("[+] Actix web app initialized.");
 
     println!("[>] Sending GET request to /health");
-    let req = test::TestRequest::get()
-        .uri("/health")
-        .to_request();
+    let req = test::TestRequest::get().uri("/health").to_request();
 
     let resp = test::call_service(&app, req).await;
     println!("[<] Received response with status: {}", resp.status());
@@ -40,7 +38,7 @@ async fn test_health_check_flow_wrong_http_method() {
         Err(e) => {
             println!("[\\]. Failed creating a test user. \n\n E: {}", e);
             panic!("Failed creating a test user. \n\n E: {}", e)
-        },
+        }
     };
     println!("[+] Created test user for auth.");
 

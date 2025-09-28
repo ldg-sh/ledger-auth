@@ -9,21 +9,11 @@ pub struct Model {
     pub name: String,
     pub email: String,
     pub token: String,
-    pub team_id: Option<Uuid>,            // FK -> team.id (nullable)
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::team::Entity",
-        from = "Column::TeamId",
-        to   = "super::team::Column::Id",
-        on_update = "Cascade",
-        on_delete = "SetNull"
-    )]
-    Team,
-}
+pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}

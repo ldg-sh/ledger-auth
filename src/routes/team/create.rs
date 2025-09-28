@@ -1,8 +1,8 @@
-use actix_web::{post, web};
-use std::sync::Arc;
-use crate::{db::postgres_service::PostgresService, types::team::RTeamCreate};
 use crate::types::response::{ApiResponse, ApiResult};
+use crate::{db::postgres_service::PostgresService, types::team::RTeamCreate};
+use actix_web::{post, web};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
 pub struct Response {
@@ -10,12 +10,11 @@ pub struct Response {
     pub message: String,
 }
 
-
 #[post("")]
 async fn create_team(
     _req: actix_web::HttpRequest,
     db: web::Data<Arc<PostgresService>>,
-    data: web::Json<RTeamCreate>
+    data: web::Json<RTeamCreate>,
 ) -> ApiResult<Response> {
     // TODO: Clean these values.
     let team = db.create_team(data.owner, data.name.clone()).await?;

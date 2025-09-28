@@ -32,7 +32,9 @@ pub fn encrypt(token: &str) -> Result<String, argon2::password_hash::Error> {
 
 pub fn verify(token: &str, hash: &str) -> Result<bool, argon2::password_hash::Error> {
     let parsed = PasswordHash::new(hash)?;
-    Ok(Argon2::default().verify_password(token.as_bytes(), &parsed).is_ok())
+    Ok(Argon2::default()
+        .verify_password(token.as_bytes(), &parsed)
+        .is_ok())
 }
 
 pub fn encrypt_to_base64(base_string: &str) -> String {
@@ -66,52 +68,41 @@ pub fn decrypt_from_base64(encoded: &str) -> AResult<String> {
 /// assert!(!valid);
 /// ```
 pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
-
     let token = match decrypt_from_base64(b64_token) {
-        Ok(token) => {
-            token
-        },
+        Ok(token) => token,
         Err(_) => {
             return false;
-        },
+        }
     };
 
     let mut parts = token.split('.');
 
     let id_str = match parts.next() {
-        Some(s) => {
-            s
-        },
+        Some(s) => s,
         None => {
             return false;
-        },
+        }
     };
 
     let id = match Uuid::parse_str(id_str) {
-        Ok(id) => {
-            id
-        },
+        Ok(id) => id,
         Err(_) => {
             return false;
-        },
+        }
     };
 
     let encrypted_token = match db.get_user_token(id).await {
-        Ok(encrypted) => {
-            encrypted
-        },
+        Ok(encrypted) => encrypted,
         Err(_) => {
             return false;
-        },
+        }
     };
 
     let raw_token = match parts.next() {
-        Some(token) => {
-            token
-        },
+        Some(token) => token,
         None => {
             return false;
-        },
+        }
     };
 
     match verify(raw_token, &encrypted_token) {
@@ -121,10 +112,8 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
             }
 
             true
-        },
-        Err(_) => {
-            false
-        },
+        }
+        Err(_) => false,
     }
 }
 
@@ -155,38 +144,28 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
 pub fn extract_token_parts(raw_token: &str) -> Option<(Uuid, String)> {
     let decoded_key = match decrypt_from_base64(raw_token) {
         Ok(decoded_key) => decoded_key,
-        Err(_) => {
-            return None
-        },
+        Err(_) => return None,
     };
 
     let parts: Vec<&str> = decoded_key.split(".").collect();
 
     let raw_uid = match parts.first() {
         Some(&uid) => uid,
-        None => {
-            return None
-        },
+        None => return None,
     };
 
     let parsed_uid = match Uuid::parse_str(raw_uid) {
         Ok(uid) => uid,
-        Err(_) => {
-            return None
-        },
+        Err(_) => return None,
     };
 
     let key = match parts.get(1) {
         Some(&key) => key,
-        None => {
-            return None
-        }
+        None => return None,
     };
-
 
     Some((parsed_uid, key.to_owned()))
 }
-
 
 pub fn construct_token(user_id: &Uuid, api_key: &str) -> String {
     encrypt_to_base64(&format!("{user_id}.{api_key}"))

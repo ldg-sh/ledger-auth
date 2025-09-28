@@ -1,10 +1,10 @@
 use actix_web::{web, App};
-use std::sync::Arc;
 use ledger_auth::{
     db::postgres_service::PostgresService,
     types::{error::AppError, token::TokenType, user::DBUserCreate},
     utils::token::{construct_token, encrypt, new_token},
 };
+use std::sync::Arc;
 use uuid::Uuid;
 
 pub struct TestClient {
@@ -17,7 +17,9 @@ impl TestClient {
     }
 
     #[allow(dead_code)]
-    pub fn create_app(&self) -> actix_web::App<
+    pub fn create_app(
+        &self,
+    ) -> actix_web::App<
         impl actix_web::dev::ServiceFactory<
             actix_web::dev::ServiceRequest,
             Config = (),
@@ -40,11 +42,15 @@ impl TestClient {
         let email = format!("admin-{}@test.com", random_id);
         println!("[>] Creating admin user with email: {}", email);
 
-        let admin_id = self.db.create_user(DBUserCreate {
-            name: "Test Admin".to_string(),
-            email: email.clone(),
-            token: encrypted_token,
-        }).await.expect("Failed to create admin");
+        let admin_id = self
+            .db
+            .create_user(DBUserCreate {
+                name: "Test Admin".to_string(),
+                email: email.clone(),
+                token: encrypted_token,
+            })
+            .await
+            .expect("Failed to create admin");
         println!("[<] Created admin user with ID: {}", admin_id);
 
         let access_token = construct_token(&admin_id, &admin_token);
@@ -53,7 +59,10 @@ impl TestClient {
         (admin_id, access_token)
     }
 
-    pub async fn create_test_user(&self, email: Option<String>) -> Result<(Uuid, String), AppError> {
+    pub async fn create_test_user(
+        &self,
+        email: Option<String>,
+    ) -> Result<(Uuid, String), AppError> {
         println!("[+] Creating test user");
         let user_token = new_token(TokenType::User);
         let encrypted_token = encrypt(&user_token).expect("Failed to encrypt token");
@@ -62,11 +71,14 @@ impl TestClient {
         let email = email.unwrap_or_else(|| format!("user-{}@test.com", random_id));
         println!("[>] Creating user with email: {}", email);
 
-        let user_id = self.db.create_user(DBUserCreate {
-            name: "Test User".to_string(),
-            email: email.clone(),
-            token: encrypted_token,
-        }).await?;
+        let user_id = self
+            .db
+            .create_user(DBUserCreate {
+                name: "Test User".to_string(),
+                email: email.clone(),
+                token: encrypted_token,
+            })
+            .await?;
         println!("[<] Created user with ID: {}", user_id);
 
         let access_token = construct_token(&user_id, &user_token);
@@ -78,13 +90,16 @@ impl TestClient {
     #[allow(dead_code)]
     pub async fn create_team_with_owner(&self, owner_id: Uuid) -> Uuid {
         println!("[+] Creating team for owner: {}", owner_id);
-        let team_id = self.db.create_team(owner_id, "Test Team".to_string())
+        let team_id = self
+            .db
+            .create_team(owner_id, "Test Team".to_string())
             .await
             .expect("Failed to create team");
         println!("[<] Created team with ID: {}", team_id);
 
         println!("[>] Setting user {}'s team to {}", owner_id, team_id);
-        self.db.set_user_team(owner_id, team_id)
+        self.db
+            .set_user_team(owner_id, team_id)
             .await
             .expect("Failed to set user team");
         println!("[<] Successfully set user's team");

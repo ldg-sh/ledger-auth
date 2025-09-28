@@ -15,9 +15,10 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {}
 
+// Many-to-many via user_team
 impl Related<super::user::Entity> for Entity {
     fn to() -> RelationDef {
-        super::user::Relation::Team.def() // Team has_many Users via user.team_id
+        super::user_team::Relation::Team.def()
     }
 }
 

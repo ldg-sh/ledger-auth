@@ -1,10 +1,7 @@
+use ledger_auth::{config::EnvConfig, db::postgres_service::PostgresService};
+use std::sync::Arc;
 use testcontainers::{runners::AsyncRunner, ContainerAsync};
 use testcontainers_modules::postgres::Postgres;
-use std::sync::Arc;
-use ledger_auth::{
-    db::postgres_service::PostgresService,
-    config::EnvConfig,
-};
 
 pub mod client;
 
@@ -23,11 +20,17 @@ impl TestContext {
 
         println!("[>] Starting postgres container");
         let postgres = Postgres::default();
-        let container = postgres.start().await.expect("Failed to start postgres container");
+        let container = postgres
+            .start()
+            .await
+            .expect("Failed to start postgres container");
         println!("[<] Postgres container started");
 
         let host = container.get_host().await.expect("Failed to get host");
-        let port = container.get_host_port_ipv4(5432).await.expect("Failed to get port");
+        let port = container
+            .get_host_port_ipv4(5432)
+            .await
+            .expect("Failed to get port");
 
         let db_url = format!("postgresql://postgres:postgres@{}:{}/postgres", host, port);
         println!("[+] Database URL: {}", db_url);
@@ -36,7 +39,7 @@ impl TestContext {
         let db = Arc::new(
             PostgresService::new(&db_url)
                 .await
-                .expect("Failed to initialize PostgresService")
+                .expect("Failed to initialize PostgresService"),
         );
         println!("[<] Database connection successful");
 
@@ -60,10 +63,9 @@ pub fn get_test_config() -> EnvConfig {
     }
 }
 
-
 pub mod test_data {
-    use ledger_auth::types::user::RUserCreate;
     use ledger_auth::types::team::RTeamCreate;
+    use ledger_auth::types::user::RUserCreate;
     use uuid::Uuid;
 
     #[allow(dead_code)]

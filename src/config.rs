@@ -7,13 +7,13 @@ pub struct EnvConfig {
     pub db_url: String,
     pub admin_key: String,
     pub resend_key: String,
-    pub grpc: GrpcConfig
+    pub grpc: GrpcConfig,
 }
 
 #[derive(Clone, Debug)]
 pub struct GrpcConfig {
     pub port: i32,
-    pub auth_key: String
+    pub auth_key: String,
 }
 
 impl EnvConfig {
@@ -24,7 +24,6 @@ impl EnvConfig {
     pub fn from_env() -> Self {
         dotenv::dotenv().ok();
 
-
         let db_url: String = Self::get_env("POSTGRES_URI");
         let resend_key: String = Self::get_env("RESEND_KEY");
 
@@ -33,7 +32,10 @@ impl EnvConfig {
             db_url,
             admin_key: Self::get_env("ADMIN_KEY"),
             resend_key,
-            grpc: GrpcConfig { port: Self::get_env("GRPC_PORT").parse().unwrap_or(50051), auth_key: Self::get_env("GRPC_AUTH_KEY") }
+            grpc: GrpcConfig {
+                port: Self::get_env("GRPC_PORT").parse().unwrap_or(50051),
+                auth_key: Self::get_env("GRPC_AUTH_KEY"),
+            },
         }
     }
 }

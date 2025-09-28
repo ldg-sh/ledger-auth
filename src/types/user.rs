@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct DBUserCreate {
@@ -10,15 +10,15 @@ pub struct DBUserCreate {
 #[derive(Serialize, Deserialize)]
 pub struct RUserCreate {
     pub name: String,
-    pub email: String
+    pub email: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct UserCreateRes {
-    pub token: String
+    pub token: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct UserRegenerateTokenRes {
-    pub message: String
+    pub message: String,
 }

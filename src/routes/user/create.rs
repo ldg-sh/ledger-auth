@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
 pub struct Response {
-    pub message: String
+    pub message: String,
 }
 
 #[post("")]
@@ -29,7 +29,11 @@ async fn create(
 
     let encrypted_token = match encrypt(&token) {
         Ok(token) => token,
-        Err(_) => return Err(AppError::Internal("There was an issue while encrypting the user's token.".to_string())),
+        Err(_) => {
+            return Err(AppError::Internal(
+                "There was an issue while encrypting the user's token.".to_string(),
+            ))
+        }
     };
 
     let user_id = db
@@ -44,7 +48,9 @@ async fn create(
 
     mail_welcome(&body.email, &access_token).await.ok();
 
-    let body = Response { message: "User created; token emailed.".to_string() };
+    let body = Response {
+        message: "User created; token emailed.".to_string(),
+    };
 
     Ok(ApiResponse::Created(body))
 }

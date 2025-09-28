@@ -8,10 +8,10 @@ use tracing::{error, info};
 
 pub mod config;
 pub mod db;
+pub mod grpc;
 pub mod routes;
 pub mod types;
 pub mod utils;
-pub mod grpc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -27,8 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     info!("Started postgres!");
 
-    let grpc_addr = format!("0.0.0.0:{}", config.grpc.port)
-        .parse()?;
+    let grpc_addr = format!("0.0.0.0:{}", config.grpc.port).parse()?;
     let grpc_service = authentication::server(postgres_service.clone());
 
     let http_addr = format!("0.0.0.0:{}", config.port);
@@ -41,17 +40,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .app_data(web::Data::new(Arc::clone(&postgres_clone)))
                 .configure(configure_routes)
         })
-            .bind(http_addr)
-            .expect("Failed to bind HTTP server")
-            .run()
-            .await
-            .expect("HTTP server crashed");
+        .bind(http_addr)
+        .expect("Failed to bind HTTP server")
+        .run()
+        .await
+        .expect("HTTP server crashed");
     });
 
     info!("Starting gRPC server on {}", grpc_addr);
-    let grpc_server = Server::builder()
-        .add_service(grpc_service)
-        .serve(grpc_addr);
+    let grpc_server = Server::builder().add_service(grpc_service).serve(grpc_addr);
 
     tokio::select! {
         _ = grpc_server => {

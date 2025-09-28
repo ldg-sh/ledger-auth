@@ -5,14 +5,14 @@ use std::fmt;
 #[derive(Serialize, Deserialize)]
 pub enum TokenType {
     User,
-    Admin
+    Admin,
 }
 
 impl fmt::Display for TokenType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             TokenType::User => write!(f, "user"),
-            TokenType::Admin => write!(f, "admin")
+            TokenType::Admin => write!(f, "admin"),
         }
     }
 }

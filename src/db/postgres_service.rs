@@ -15,6 +15,8 @@ impl PostgresService {
 
         info!("Successfully connected to PostgreSQL and ran migrations.");
 
-        Ok(Self { database_connection })
+        Ok(Self {
+            database_connection,
+        })
     }
 }

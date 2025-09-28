@@ -8,8 +8,8 @@ pub async fn send_email(email: SendEmail) -> Result<String, String> {
     let api_key = &config().resend_key;
 
     // Pre-serialize for logging + request body
-    let payload = serde_json::to_string_pretty(&email)
-        .map_err(|e| format!("serialize email failed: {e}"))?;
+    let payload =
+        serde_json::to_string_pretty(&email).map_err(|e| format!("serialize email failed: {e}"))?;
 
     let client: Client = ClientBuilder::new()
         .user_agent("ledger/1.0 (+reqwest)")
@@ -27,10 +27,16 @@ pub async fn send_email(email: SendEmail) -> Result<String, String> {
         .build()
         .map_err(|e| format!("build request failed: {e}"))?;
 
-    let res = client.execute(req).await.map_err(|e| format!("send failed: {e}"))?;
+    let res = client
+        .execute(req)
+        .await
+        .map_err(|e| format!("send failed: {e}"))?;
 
     let status = res.status();
-    let body = res.text().await.map_err(|e| format!("read body failed: {e}"))?;
+    let body = res
+        .text()
+        .await
+        .map_err(|e| format!("read body failed: {e}"))?;
 
     if status.is_success() {
         Ok(body)
@@ -38,7 +44,6 @@ pub async fn send_email(email: SendEmail) -> Result<String, String> {
         Err(format!("Resend API error: HTTP {status}: {body}"))
     }
 }
-
 
 pub async fn mail_token_reset(target_email: &str, new_token: &str) -> Result<String, String> {
     info!("Fake email to: {} with token: {}", target_email, new_token);
@@ -52,7 +57,6 @@ pub async fn mail_token_reset(target_email: &str, new_token: &str) -> Result<Str
     // }).await
 }
 
-
 pub async fn mail_welcome(target_email: &str, token: &str) -> Result<String, String> {
     info!("Fake email to: {} with token: {}", target_email, token);
     Ok("Fake email sent.".to_string())
@@ -65,9 +69,15 @@ pub async fn mail_welcome(target_email: &str, token: &str) -> Result<String, Str
     // }).await
 }
 
-
-pub async fn mail_team_invite(target_email: &str, team_name: &str, invite_code: &str) -> Result<String, String> {
-    info!("Fake email to: {} \n\nteam name: {} \n\ninvite code: {}", target_email, team_name, invite_code);
+pub async fn mail_team_invite(
+    target_email: &str,
+    team_name: &str,
+    invite_code: &str,
+) -> Result<String, String> {
+    info!(
+        "Fake email to: {} \n\nteam name: {} \n\ninvite code: {}",
+        target_email, team_name, invite_code
+    );
     Ok("Fake email sent.".to_string())
     // send_email(SendEmail {
     //     from: "me@mail.noahdunnagan.com".to_string(),

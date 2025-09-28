@@ -1,7 +1,7 @@
 mod common;
 
-use actix_web::{test, http::StatusCode};
-use common::{TestContext, test_data, client::TestClient};
+use actix_web::{http::StatusCode, test};
+use common::{client::TestClient, test_data, TestContext};
 
 #[tokio::test]
 async fn test_user_creation_flow_success() {
@@ -36,15 +36,19 @@ async fn test_user_creation_flow_success() {
     assert!(body["message"].as_str().unwrap().contains("User created"));
 
     // Verify user was created in database
-    println!("[>] Verifying user creation in database for email: {}", user_data.email);
-    let created_user = ctx.db.get_user_by_email(user_data.email.clone()).await;
+    println!(
+        "[>] Verifying user creation in database for email: {}",
+        user_data.email
+    );
+    let created_user = ctx.db.get_user_by_email(&user_data.email).await;
     assert!(created_user.is_ok());
     println!("[<] User found in database.");
 
     let user = created_user.unwrap();
     assert_eq!(user.email, user_data.email);
     assert_eq!(user.name, user_data.name);
-    assert!(user.token.is_empty());
+    println!("{}", user.token.clone());
+    assert!(!user.token.is_empty());
     println!("[/] Test passed: User creation flow successful.");
 }
 
@@ -155,7 +159,10 @@ async fn test_user_creation_flow_duplicate_email() {
 
     // Create first user
     let user_data1 = test_data::sample_user();
-    println!("[>] Sending request to create first user: {:?}", user_data1.name);
+    println!(
+        "[>] Sending request to create first user: {:?}",
+        user_data1.name
+    );
     let req1 = test::TestRequest::post()
         .uri("/user/create")
         .insert_header(("Authorization", format!("Bearer {}", admin_token)))
@@ -163,12 +170,18 @@ async fn test_user_creation_flow_duplicate_email() {
         .to_request();
 
     let resp1 = test::call_service(&app, req1).await;
-    println!("[<] Received response for first user with status: {}", resp1.status());
+    println!(
+        "[<] Received response for first user with status: {}",
+        resp1.status()
+    );
     assert_eq!(resp1.status(), StatusCode::CREATED);
 
     // Try to create user with same email
     let user_data2 = test_data::sample_user(); // Same email
-    println!("[>] Sending request to create second user with same email: {:?}", user_data2.name);
+    println!(
+        "[>] Sending request to create second user with same email: {:?}",
+        user_data2.name
+    );
     let req2 = test::TestRequest::post()
         .uri("/user/create")
         .insert_header(("Authorization", format!("Bearer {}", admin_token)))
@@ -176,7 +189,10 @@ async fn test_user_creation_flow_duplicate_email() {
         .to_request();
 
     let resp2 = test::call_service(&app, req2).await;
-    println!("[<] Received response for second user with status: {}", resp2.status());
+    println!(
+        "[<] Received response for second user with status: {}",
+        resp2.status()
+    );
 
     // Should fail due to duplicate email
     assert!(resp2.status().is_client_error() || resp2.status().is_server_error());
@@ -198,11 +214,14 @@ async fn test_user_regenerate_token_flow_success() {
         Err(e) => {
             println!("[\\]. Failed creating a test user. \n\n E: {}", e);
             panic!("Failed creating a test user. \n\n E: {}", e)
-        },
+        }
     };
     println!("[<] User created with ID: {}", user_id);
 
-    println!("[>] Sending request to regenerate token for user: {}", user_id);
+    println!(
+        "[>] Sending request to regenerate token for user: {}",
+        user_id
+    );
     let req = test::TestRequest::post()
         .uri("/user/regenerate")
         .insert_header(("Authorization", format!("Bearer {}", user_token)))
@@ -215,12 +234,18 @@ async fn test_user_regenerate_token_flow_success() {
 
     let body: serde_json::Value = test::read_body_json(resp).await;
     println!("[<] Response body: {}", body);
-    assert!(body["message"].as_str().unwrap().contains("Regenerated user token"));
+    assert!(body["message"]
+        .as_str()
+        .unwrap()
+        .contains("Regenerated user token"));
 
     // Verify token was actually changed in database
-    println!("[>] Verifying token was changed in database for user: {}", user_id);
+    println!(
+        "[>] Verifying token was changed in database for user: {}",
+        user_id
+    );
     let updated_user = ctx.db.get_user_by_id(&user_id).await.unwrap();
-    assert!(updated_user.token.is_empty());
+    assert!(!updated_user.token.is_empty());
     println!("[<] Token verified in database.");
     println!("[/] Test passed: User token regeneration successful.");
 }

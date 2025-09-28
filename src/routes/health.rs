@@ -5,14 +5,12 @@ use crate::types::response::{ApiResponse, ApiResult};
 
 #[derive(Serialize, Deserialize)]
 pub struct Response {
-    message: String
+    message: String,
 }
 
 #[get("")]
-async fn health(
-    _req: actix_web::HttpRequest
-) -> ApiResult<Response> {
+async fn health(_req: actix_web::HttpRequest) -> ApiResult<Response> {
     Ok(ApiResponse::Ok(Response {
-        message: "ok".to_string()
+        message: "ok".to_string(),
     }))
 }

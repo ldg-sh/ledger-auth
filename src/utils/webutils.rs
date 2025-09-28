@@ -10,17 +10,27 @@ pub fn decode_all(input: &str) -> Option<String> {
     urlencoding::decode(input).ok().map(|cow| cow.into_owned())
 }
 
-pub async fn validate_token(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+pub async fn validate_token(
+    req: ServiceRequest,
+    credentials: BearerAuth,
+) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
     if credentials.token() == config().admin_key {
         Ok(req)
     } else {
         let db = match req.app_data::<web::Data<Arc<PostgresService>>>().cloned() {
             Some(db) => db,
-            None => return Err((ErrorUnauthorized("DB unavailable. Please contact admin something bad happened."), req)),
+            None => {
+                return Err((
+                    ErrorUnauthorized(
+                        "DB unavailable. Please contact admin something bad happened.",
+                    ),
+                    req,
+                ))
+            }
         };
 
         if token_valid(&db, credentials.token()).await {
-            return Ok(req)
+            return Ok(req);
         }
 
         Err((ErrorUnauthorized("Invalid token std validate"), req))
@@ -28,13 +38,23 @@ pub async fn validate_token(req: ServiceRequest, credentials: BearerAuth) -> Res
 }
 
 /// For middleware to pass, you must own a team. Preliminary Auth.
-pub async fn team_owner(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+pub async fn team_owner(
+    req: ServiceRequest,
+    credentials: BearerAuth,
+) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
     if credentials.token() == config().admin_key {
         Ok(req)
     } else {
         let db = match req.app_data::<web::Data<Arc<PostgresService>>>().cloned() {
             Some(db) => db,
-            None => return Err((ErrorUnauthorized("DB unavailable. Please contact admin something bad happened."), req)),
+            None => {
+                return Err((
+                    ErrorUnauthorized(
+                        "DB unavailable. Please contact admin something bad happened.",
+                    ),
+                    req,
+                ))
+            }
         };
 
         let user_id = match extract_token_parts(credentials.token()) {
@@ -43,21 +63,34 @@ pub async fn team_owner(req: ServiceRequest, credentials: BearerAuth) -> Result<
         };
 
         if db.user_is_team_owner(user_id).await.is_ok() {
-            return Ok(req)
+            return Ok(req);
         }
 
-        Err((ErrorUnauthorized("You must be a team owner to perform that action."), req))
+        Err((
+            ErrorUnauthorized("You must be a team owner to perform that action."),
+            req,
+        ))
     }
 }
 
 /// For middleware to pass, you must not own a team. Preliminary Auth.
-pub async fn not_team_owner(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+pub async fn not_team_owner(
+    req: ServiceRequest,
+    credentials: BearerAuth,
+) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
     if credentials.token() == config().admin_key {
         Ok(req)
     } else {
         let db = match req.app_data::<web::Data<Arc<PostgresService>>>().cloned() {
             Some(db) => db,
-            None => return Err((ErrorUnauthorized("DB unavailable. Please contact admin something bad happened."), req)),
+            None => {
+                return Err((
+                    ErrorUnauthorized(
+                        "DB unavailable. Please contact admin something bad happened.",
+                    ),
+                    req,
+                ))
+            }
         };
 
         let user_id = match extract_token_parts(credentials.token()) {
@@ -66,7 +99,10 @@ pub async fn not_team_owner(req: ServiceRequest, credentials: BearerAuth) -> Res
         };
 
         if db.user_is_team_owner(user_id).await.is_ok() {
-            return Err((ErrorUnauthorized("You must be a team owner to perform that action."), req))
+            return Err((
+                ErrorUnauthorized("You must be a team owner to perform that action."),
+                req,
+            ));
         }
 
         Ok(req)
@@ -77,7 +113,10 @@ pub fn grpc_valid(tok: &str) -> bool {
     tok == config().grpc.auth_key
 }
 
-pub async fn validate_admin_token(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
+pub async fn validate_admin_token(
+    req: ServiceRequest,
+    credentials: BearerAuth,
+) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
     // First check static admin key
     if credentials.token() == config().admin_key {
         return Ok(req);
@@ -86,7 +125,12 @@ pub async fn validate_admin_token(req: ServiceRequest, credentials: BearerAuth) 
     // If not static admin key, check database admin tokens
     let db = match req.app_data::<web::Data<Arc<PostgresService>>>().cloned() {
         Some(db) => db,
-        None => return Err((ErrorUnauthorized("DB unavailable. Please contact admin something bad happened."), req)),
+        None => {
+            return Err((
+                ErrorUnauthorized("DB unavailable. Please contact admin something bad happened."),
+                req,
+            ))
+        }
     };
 
     // Validate token exists in database
@@ -116,6 +160,6 @@ pub async fn validate_admin_token(req: ServiceRequest, credentials: BearerAuth) 
                 Err((ErrorUnauthorized("Admin privileges required"), req))
             }
         }
-        Err(_) => Err((ErrorUnauthorized("User not found"), req))
+        Err(_) => Err((ErrorUnauthorized("User not found"), req)),
     }
 }

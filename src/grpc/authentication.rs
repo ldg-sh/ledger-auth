@@ -1,4 +1,7 @@
-use super::pb::{authentication_server::{Authentication, AuthenticationServer}, GetUserTeamRequest, GetUserTeamResponse, ValidationRequest, ValidationResponse};
+use super::pb::{
+    authentication_server::{Authentication, AuthenticationServer},
+    GetUserTeamRequest, GetUserTeamResponse, ValidationRequest, ValidationResponse,
+};
 use crate::utils::token::{extract_token_parts, token_valid};
 use crate::{config::config, db::postgres_service::PostgresService};
 use std::sync::Arc;
@@ -11,7 +14,9 @@ pub struct AuthenticationSvc {
 }
 
 impl AuthenticationSvc {
-    pub fn new(postgres_service: Arc<PostgresService>) -> Self { Self { postgres_service } }
+    pub fn new(postgres_service: Arc<PostgresService>) -> Self {
+        Self { postgres_service }
+    }
 }
 
 #[tonic::async_trait]
@@ -30,16 +35,30 @@ impl Authentication for AuthenticationSvc {
         let validation_request = request.into_inner();
 
         let body_token_valid = token_valid(&self.postgres_service, &validation_request.token).await;
-        let header_token_valid = header_token == config().grpc.auth_key;
+        if header_token != config().grpc.auth_key {
+            return Ok(
+                Response::new(ValidationResponse { is_valid: false, user_id: "".to_string(), message: "Invalid authorization token.".into() })
+            )
+        }
 
-        let ok = body_token_valid && header_token_valid;
 
-        let user_id = extract_token_parts(&validation_request.token).unwrap().0;
+        let user_id = match extract_token_parts(&validation_request.token) {
+            Some(user_id) => user_id.0,
+            None => {
+                return Ok(
+                    Response::new(ValidationResponse {
+                        is_valid: false,
+                        user_id: "".to_string(),
+                        message: "Malformed token.".into()
+                    })
+                )
+            },
+        };
 
         Ok(Response::new(ValidationResponse {
-            is_valid: ok,
-            user_id: if ok { user_id.to_string() } else { "".into() },
-            message: if ok { "ok".into() } else { "invalid".into() },
+            is_valid: body_token_valid,
+            user_id: if body_token_valid { user_id.into() } else { "".into() },
+            message: if body_token_valid { "ok".into() } else { "invalid".into() },
         }))
     }
 
@@ -55,7 +74,11 @@ impl Authentication for AuthenticationSvc {
             }
         };
 
-        let team = match self.postgres_service.get_team_for_user(extracted_uuid).await {
+        let team = match self
+            .postgres_service
+            .get_team_for_user(extracted_uuid)
+            .await
+        {
             Ok(team) => team,
             Err(_) => {
                 return Err(Status::not_found("User not found or no team associated"));
@@ -64,7 +87,7 @@ impl Authentication for AuthenticationSvc {
 
         Ok(Response::new(GetUserTeamResponse {
             team_id: team.id.to_string(),
-            success: true
+            success: true,
         }))
     }
 }
