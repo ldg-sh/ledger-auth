@@ -76,7 +76,7 @@ impl Authentication for AuthenticationSvc {
 
         let team = match self
             .postgres_service
-            .get_team_for_user(extracted_uuid)
+            .list_user_teams(extracted_uuid)
             .await
         {
             Ok(team) => team,
@@ -86,7 +86,7 @@ impl Authentication for AuthenticationSvc {
         };
 
         Ok(Response::new(GetUserTeamResponse {
-            team_id: team.id.to_string(),
+            team_id: team,
             success: true,
         }))
     }

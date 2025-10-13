@@ -1,3 +1,4 @@
+use crate::db;
 use crate::db::postgres_service::PostgresService;
 use crate::{
     types::{error::AppError, token::TokenType, user},
@@ -150,6 +151,20 @@ impl PostgresService {
         Err(AppError::Db(DbErr::RecordNotFound(
             "User doesn't have a team...".to_string(),
         )))
+    }
+
+    /// List all of A user's teams. (The teams they are in)
+    pub async fn list_user_teams(&self, user_id: Uuid) -> Result<Vec<String>, AppError> {
+        let _ = self.get_user_by_id(&user_id).await?; // Rejects if non exist.
+
+        let teams = UserTeam::find()
+            .filter(entity::user_team::Column::UserId.eq(user_id))
+            .all(&self.database_connection)
+            .await?;
+
+        let ids: Vec<String> = teams.iter().map(|i| i.team_id.to_string()).collect();
+
+        Ok(ids)
     }
 
     /// Is the user (any) team owner.
