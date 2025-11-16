@@ -64,9 +64,7 @@ pub fn get_test_config() -> EnvConfig {
 }
 
 pub mod test_data {
-    use ledger_auth::types::team::RTeamCreate;
     use ledger_auth::types::user::RUserCreate;
-    use uuid::Uuid;
 
     #[allow(dead_code)]
     pub fn sample_user() -> RUserCreate {
@@ -81,14 +79,6 @@ pub mod test_data {
         RUserCreate {
             name: "Test User".to_string(),
             email: email.to_string(),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn sample_team(owner_id: Uuid) -> RTeamCreate {
-        RTeamCreate {
-            name: "Test Team".to_string(),
-            owner: owner_id,
         }
     }
 }

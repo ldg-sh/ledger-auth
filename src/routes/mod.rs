@@ -1,19 +1,17 @@
-use crate::utils::webutils::validate_token;
+use crate::utils::webutils::{validate_admin_token, validate_token};
 use actix_web::web;
 
 pub mod fail;
 pub mod health;
-pub mod team;
 pub mod user;
 pub mod validate;
 
 // TODO:
-// Obviously, some logic needs cleaning. We also need to create a middleware wrapper that checks if you are a team owner in general.
-// We need to find out if we can wrap twice in two types of authentication, which could be useful.
+// Route auth still needs refinement once we add richer roles/scopes beyond simple token validation.
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     let user_auth = actix_web_httpauth::middleware::HttpAuthentication::bearer(validate_token);
-    //let admin_auth = actix_web_httpauth::middleware::HttpAuthentication::bearer(validate_admin_token);
+    let admin_auth = actix_web_httpauth::middleware::HttpAuthentication::bearer(validate_admin_token);
 
     // Anything on the /health endpoint
     cfg.service(web::scope("/health").service(health::health));
@@ -24,6 +22,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         web::scope("/user")
             // user/create
             .service(web::scope("/create").service(user::create::create))
+            .wrap(admin_auth)
             // user/regenerate
             .service(
                 web::scope("/regenerate")
@@ -34,29 +33,6 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
     // Anything on the /validate endpoint
     cfg.service(web::scope("/validate").service(validate::validate));
-
-    // Anything on the /team endpoint
-    cfg.service(
-        web::scope("/team")
-            // team/create
-            .service(
-                web::scope("/create")
-                    .service(team::create::create_team)
-                    .wrap(user_auth.clone()),
-            )
-            // team/invite/accept
-            .service(
-                web::scope("/invite/accept")
-                    .service(team::accept_invite::accept_invite)
-                    .wrap(user_auth),
-            )
-            // team/admin
-            .service(
-                web::scope("/admin")
-                    // team/admin/invite
-                    .service(web::scope("/invite").service(team::admin::invite::admin_invite)),
-            ),
-    ); // TODO: Auth for team routes
 
     cfg.service(web::scope("/fail").service(fail::fail));
 }

@@ -91,7 +91,7 @@ pub async fn token_valid(db: &PostgresService, b64_token: &str) -> bool {
         }
     };
 
-    let encrypted_token = match db.get_user_token(id).await {
+    let encrypted_token = match db.get_user_auth_hash(id).await {
         Ok(encrypted) => encrypted,
         Err(_) => {
             return false;

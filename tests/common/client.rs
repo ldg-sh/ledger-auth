@@ -47,7 +47,7 @@ impl TestClient {
             .create_user(DBUserCreate {
                 name: "Test Admin".to_string(),
                 email: email.clone(),
-                token: encrypted_token,
+                auth_hash: encrypted_token,
             })
             .await
             .expect("Failed to create admin");
@@ -76,7 +76,7 @@ impl TestClient {
             .create_user(DBUserCreate {
                 name: "Test User".to_string(),
                 email: email.clone(),
-                token: encrypted_token,
+                auth_hash: encrypted_token,
             })
             .await?;
         println!("[<] Created user with ID: {}", user_id);
@@ -85,25 +85,5 @@ impl TestClient {
         println!("[+] Constructed access token for user: {}", user_id);
 
         Ok((user_id, access_token))
-    }
-
-    #[allow(dead_code)]
-    pub async fn create_team_with_owner(&self, owner_id: Uuid) -> Uuid {
-        println!("[+] Creating team for owner: {}", owner_id);
-        let team_id = self
-            .db
-            .create_team(owner_id, "Test Team".to_string())
-            .await
-            .expect("Failed to create team");
-        println!("[<] Created team with ID: {}", team_id);
-
-        println!("[>] Setting user {}'s team to {}", owner_id, team_id);
-        self.db
-            .set_user_team(owner_id, team_id)
-            .await
-            .expect("Failed to set user team");
-        println!("[<] Successfully set user's team");
-
-        team_id
     }
 }

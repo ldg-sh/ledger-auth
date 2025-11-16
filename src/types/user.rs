@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct DBUserCreate {
     pub name: String,
     pub email: String,
-    pub token: String,
+    pub auth_hash: String,
 }
 
 #[derive(Serialize, Deserialize)]

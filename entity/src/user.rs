@@ -8,7 +8,7 @@ pub struct Model {
     pub id: Uuid,
     pub name: String,
     pub email: String,
-    pub token: String,
+    pub auth_hash: String,
     pub created_at: DateTimeUtc,
     pub updated_at: DateTimeUtc,
 }

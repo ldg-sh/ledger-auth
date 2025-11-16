@@ -47,8 +47,8 @@ async fn test_user_creation_flow_success() {
     let user = created_user.unwrap();
     assert_eq!(user.email, user_data.email);
     assert_eq!(user.name, user_data.name);
-    println!("{}", user.token.clone());
-    assert!(!user.token.is_empty());
+    println!("{}", user.auth_hash.clone());
+    assert!(!user.auth_hash.is_empty());
     println!("[/] Test passed: User creation flow successful.");
 }
 
@@ -245,7 +245,7 @@ async fn test_user_regenerate_token_flow_success() {
         user_id
     );
     let updated_user = ctx.db.get_user_by_id(&user_id).await.unwrap();
-    assert!(!updated_user.token.is_empty());
+    assert!(!updated_user.auth_hash.is_empty());
     println!("[<] Token verified in database.");
     println!("[/] Test passed: User token regeneration successful.");
 }

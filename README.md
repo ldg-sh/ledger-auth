@@ -14,16 +14,14 @@ It provides secure token issuance and access control for Ledger.
 - [x] Standard response type.
 - [x] File delete
 - [x] User create, update, and delete
-- [x] User can be in multiple teams.
 - [ ] Lock files ops behind auth
-- [ ] Team based auth for file access (even if solo)
-- [ ] Team based admin controls, add/remove users (even if solo)
-- [ ] Ability to safely share files (team member, password, or public)
-- [x] Bucket folder structure per team; team names must be unique
+- [x] Token reset endpoint + email notification
+- [ ] Ability to safely share files (password or public scopes)
+- [ ] Pluggable RBAC once scope expands again
 - [ ] File encryption at rest (SSE-C AES-256? probably SSE-C and "workspace" specific decryption)
 - [ ] Team deletion (should email admin with a conf code)
 
 ## Auth MVP.
 - [x] User create, update, and delete
-- [x] Team based auth for file access (even if solo)
-- [x] Team based admin controls, add/remove users (even if solo)
+- [x] Token-based auth for file access (single-tenant)
+- [ ] Admin/user roles (future)

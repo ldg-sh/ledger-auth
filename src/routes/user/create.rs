@@ -40,7 +40,7 @@ async fn create(
         .create_user(DBUserCreate {
             name: body.name.clone(),
             email: body.email.clone(),
-            token: encrypted_token,
+            auth_hash: encrypted_token,
         })
         .await?;
 

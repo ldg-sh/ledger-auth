@@ -68,22 +68,3 @@ pub async fn mail_welcome(target_email: &str, token: &str) -> Result<String, Str
     //     ..Default::default()
     // }).await
 }
-
-pub async fn mail_team_invite(
-    target_email: &str,
-    team_name: &str,
-    invite_code: &str,
-) -> Result<String, String> {
-    info!(
-        "Fake email to: {} \n\nteam name: {} \n\ninvite code: {}",
-        target_email, team_name, invite_code
-    );
-    Ok("Fake email sent.".to_string())
-    // send_email(SendEmail {
-    //     from: "me@mail.noahdunnagan.com".to_string(),
-    //     to: vec![target_email.to_string()],
-    //     subject: "Welcome to Ledger!".to_string(),
-    //     text: Some(format!("You have been invited to join {}. \n \nYour invite code is: {}", team_name, invite_code)),
-    //     ..Default::default()
-    // }).await
-}
