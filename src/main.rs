@@ -2,6 +2,7 @@ use crate::db::postgres_service::PostgresService;
 use crate::grpc::authentication;
 use crate::routes::configure_routes;
 use actix_web::{web, App, HttpServer};
+use env_logger::Env;
 use std::sync::Arc;
 use tonic::transport::Server;
 use tracing::{error, info};
@@ -15,7 +16,8 @@ pub mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    env_logger::init();
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+
     let config = config::EnvConfig::from_env();
     config::CONFIG.set(config.clone()).unwrap();
 
