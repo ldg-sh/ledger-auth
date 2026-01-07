@@ -2,35 +2,38 @@ FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 WORKDIR /ledger-auth
 
 FROM chef AS planner
+RUN apt-get update && apt-get install -y git
+
+COPY .git ./.git
+COPY .gitmodules ./.gitmodules
+RUN git submodule update --init --recursive
+
 COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
 COPY migration ./migration
 COPY src ./src
-COPY proto ./proto
+COPY build.rs ./build.rs
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
-RUN apt-get update && apt-get install -y protobuf-compiler tree
+RUN apt-get update && apt-get install -y protobuf-compiler git
 ENV PROTOC=/usr/bin/protoc
 
 COPY --from=planner /ledger-auth/recipe.json recipe.json
 
+COPY .git ./.git
+COPY .gitmodules ./.gitmodules
+RUN git submodule update --init --recursive
+
 COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
 COPY migration ./migration
 COPY src ./src
-COPY proto ./proto
+COPY build.rs ./build.rs
 
 RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
-
-RUN echo "=== Directory structure ===" && \
-    tree -L 3 /ledger-auth && \
-    echo "=== Checking proto directory ===" && \
-    ls -la /ledger-auth/proto/ && \
-    ls -la /ledger-auth/proto/auth/ || echo "auth directory not found"
-
 RUN cargo build --release --bin ledger-auth
 
 FROM debian:bookworm-slim AS runtime
