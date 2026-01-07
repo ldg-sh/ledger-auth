@@ -1,5 +1,4 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
-RUN cargo install cargo-chef
 WORKDIR /ledger-auth
 
 FROM chef AS planner
@@ -7,6 +6,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
 COPY migration ./migration
 COPY src ./src
+COPY proto ./proto
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -19,6 +19,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
 COPY migration ./migration
 COPY src ./src
+COPY proto ./proto
 
 RUN cargo chef cook --release --recipe-path recipe.json
 
