@@ -7,12 +7,10 @@ COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
 COPY migration ./migration
 COPY src ./src
-COPY proto ./proto
-
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
-RUN apt-get update && apt-get install -y protobuf-compiler git
+RUN apt-get update && apt-get install -y protobuf-compiler
 ENV PROTOC=/usr/bin/protoc
 
 COPY --from=planner /ledger-auth/recipe.json recipe.json
@@ -21,11 +19,6 @@ COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
 COPY migration ./migration
 COPY src ./src
-COPY .git .git
-
-RUN git submodule init && git submodule update
-
-COPY proto ./proto
 
 RUN cargo chef cook --release --recipe-path recipe.json
 

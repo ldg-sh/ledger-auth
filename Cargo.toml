@@ -46,3 +46,4 @@ testcontainers-modules = { version = "0.8", features = ["postgres"] }
 
 [build-dependencies]
 tonic-prost-build = "*"
+tonic-build = "0.14.1"

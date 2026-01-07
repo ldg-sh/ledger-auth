@@ -2266,6 +2266,7 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tonic",
+ "tonic-build",
  "tonic-prost",
  "tonic-prost-build",
  "tracing",
