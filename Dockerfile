@@ -2,11 +2,9 @@ FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 WORKDIR /ledger-auth
 
 FROM chef AS planner
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y git protobuf-compiler
 
-COPY .git ./.git
-COPY .gitmodules ./.gitmodules
-RUN git submodule update --init --recursive
+RUN git clone --depth 1 --branch main https://github.com/ldg-sh/ledger-protobuf proto
 
 COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
@@ -19,11 +17,11 @@ FROM chef AS builder
 RUN apt-get update && apt-get install -y protobuf-compiler git
 ENV PROTOC=/usr/bin/protoc
 
-COPY --from=planner /ledger-auth/recipe.json recipe.json
+ARG PROTO_REPO_URL
+ARG PROTO_REPO_BRANCH=main
+RUN git clone --depth 1 --branch main https://github.com/ldg-sh/ledger-protobuf proto
 
-COPY .git ./.git
-COPY .gitmodules ./.gitmodules
-RUN git submodule update --init --recursive
+COPY --from=planner /ledger-auth/recipe.json recipe.json
 
 COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
