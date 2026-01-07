@@ -1,4 +1,4 @@
-use crate::utils::token::{extract_token_parts, token_valid};
+use crate::utils::token::token_valid;
 use actix_web::{dev::ServiceRequest, error::ErrorUnauthorized, web};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use std::sync::Arc;

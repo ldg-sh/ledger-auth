@@ -7,6 +7,8 @@ COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
 COPY migration ./migration
 COPY src ./src
+COPY proto ./proto
+
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -19,6 +21,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY entity ./entity
 COPY migration ./migration
 COPY src ./src
+COPY proto ./proto
 
 RUN cargo chef cook --release --recipe-path recipe.json
 
