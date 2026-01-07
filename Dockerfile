@@ -12,7 +12,8 @@ COPY proto ./proto
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
-RUN apt-get update && apt-get install -y protobuf-compiler
+RUN apt-get update && apt-get install -y protobuf-compiler git
+RUN git submodule init && git submodule update
 ENV PROTOC=/usr/bin/protoc
 
 COPY --from=planner /ledger-auth/recipe.json recipe.json
