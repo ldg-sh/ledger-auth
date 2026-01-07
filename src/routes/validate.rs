@@ -17,7 +17,6 @@ async fn validate(
     auth: BearerAuth,
     db: web::Data<Arc<PostgresService>>,
 ) -> ApiResult<Response> {
-    // Validate the token
     if !token_valid(&db, auth.token()).await {
         return Err(AppError::Unauthorized);
     }

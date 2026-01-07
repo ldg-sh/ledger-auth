@@ -60,7 +60,7 @@ pub fn decrypt_from_base64(encoded: &str) -> AResult<String> {
 /// - a token for that UUID exists in the database,
 /// - and the provided raw token matches the stored encrypted token.
 ///
-/// Otherwise returns `false`.
+/// Otherwise, returns `false`.
 ///
 /// # Example
 /// ```ignore
